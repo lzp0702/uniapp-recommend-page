@@ -33,13 +33,13 @@
   <scroll-view v-else-if="activeTab===1" class="subpage" scroll-y>
     <view class="discover-hero"><text class="banner-kicker">EXPLORE MORE</text><text class="banner-title">发现精彩</text><text class="banner-sub">从兴趣开始，认识新的朋友</text></view>
     <view class="section-title">探索频道</view>
-    <view class="channel-grid"><view v-for="(c,i) in channels" :key="c.name" class="channel" :class="'c'+i" @tap="toast=c.name+'频道即将开放'"><text>{{c.icon}}</text><b>{{c.name}}</b><small>{{c.desc}}</small></view></view>
-    <view class="section-title">今日话题</view><view v-for="topic in topics" :key="topic" class="topic" @tap="toast='已进入话题：'+topic"># {{topic}} <text>参与讨论 ›</text></view>
+    <view class="channel-grid"><view v-for="(c,i) in channels" :key="c.name" class="channel" :class="'c'+i" @tap="openFeature('channel',c.name)"><text>{{c.icon}}</text><b>{{c.name}}</b><small>{{c.desc}}</small></view></view>
+    <view class="section-title">今日话题</view><view v-for="topic in topics" :key="topic" class="topic" @tap="openFeature('topic',topic)"># {{topic}} <text>参与讨论 ›</text></view>
   </scroll-view>
 
   <scroll-view v-else-if="activeTab===2" class="subpage" scroll-y>
     <view class="message-head"><text class="banner-kicker">YOUR CONNECTIONS</text><text class="banner-title">消息</text><text class="banner-sub">每一次回应，都是新的开始</text></view>
-    <view class="quick-actions"><view @tap="toast='暂无新的喜欢'">♡<small>喜欢我的</small></view><view @tap="toast='暂无新的访客'">◉<small>最近访客</small></view><view @tap="toast='暂无新的匹配'">✦<small>新的匹配</small></view></view>
+    <view class="quick-actions"><view @tap="openFeature('likes')">♡<small>喜欢我的</small></view><view @tap="openFeature('visitors')">◉<small>最近访客</small></view><view @tap="openFeature('matches')">✦<small>新的匹配</small></view></view>
     <view class="section-title">最近聊天 <text class="muted">全部消息</text></view>
     <view v-for="(m,i) in chats" :key="m.name" class="chat-row" @tap="openChat(m)"><view class="chat-avatar">{{m.name.slice(0,1)}}</view><view class="chat-info"><b>{{m.name}}</b><small>{{m.last}}</small></view><view class="chat-meta"><small>{{m.time}}</small><i v-if="i===0">2</i></view></view>
   </scroll-view>
@@ -47,7 +47,7 @@
   <scroll-view v-else class="subpage" scroll-y>
     <view class="my-head"><view class="my-top"><text class="banner-kicker">MY SPACE</text><text @tap="openSettings">⚙ 设置</text></view><view class="my-profile"><view class="my-avatar">B</view><view><text class="my-name">遇见新朋友</text><small>完善资料，让更多人认识你</small></view><text class="edit" @tap="openAuth">编辑 ›</text></view><view class="completion"><view><text>资料完整度</text><b>65%</b></view><view class="progress"><i></i></view></view></view>
     <view class="my-stats"><view><b>0</b><small>获赞</small></view><view><b>0</b><small>关注</small></view><view><b>0</b><small>访客</small></view></view>
-    <view class="menu"><view v-for="m in myMenus" :key="m.name" @tap="m.url?go(m.url):toast=m.name+'功能即将开放'"><text>{{m.icon}}　{{m.name}}</text><text>›</text></view></view>
+    <view class="menu"><view v-for="m in myMenus" :key="m.name" @tap="m.url?go(m.url):openFeature(m.type)"><text>{{m.icon}}　{{m.name}}</text><text>›</text></view></view>
   </scroll-view>
 
   <view class="tabbar">
@@ -67,7 +67,7 @@ const tabTitles=['推荐','发现','消息','我的']
 const tabs=[{label:'推荐',icon:'⌂'},{label:'发现',icon:'✧'},{label:'消息',icon:'♡'},{label:'我的',icon:'◉'}]
 const channels=[{icon:'♡',name:'同城交友',desc:'发现身边的缘分'},{icon:'♫',name:'兴趣社群',desc:'找到同好伙伴'},{icon:'◉',name:'语音派对',desc:'用声音认识彼此'},{icon:'✦',name:'直播互动',desc:'分享此刻精彩'}]
 const topics=['周末去哪儿玩','分享最近喜欢的歌','理想中的第一次约会']
-const myMenus=[{icon:'▧',name:'我的动态'},{icon:'♡',name:'我的喜欢'},{icon:'♧',name:'我的关注'},{icon:'◇',name:'实名认证'},{icon:'⚙',name:'账号与设置',url:'/pages/settings/index'}]
+const myMenus=[{icon:'▧',name:'我的动态',type:'dynamic'},{icon:'♡',name:'我的喜欢',type:'likes'},{icon:'♧',name:'我的关注',type:'following'},{icon:'◇',name:'实名认证',type:'verify'},{icon:'⚙',name:'账号与设置',url:'/pages/settings/index'}]
 const chats=ref([{name:'小鱼',last:'周末一起去看展吗？',time:'刚刚'},{name:'江姜',last:'哈哈哈哈太有意思了',time:'10:24'},{name:'柒',last:'欢迎来我的直播间～',time:'昨天'},{name:'安安',last:'你好，很高兴认识你',time:'周一'}])
 const names=['浅安','小鱼','柒','江姜','早睡','优优','晚风','南栀','橘子海','林间','星野','桃桃','阿梨','七月','小满','可乐','山茶','知夏','月亮','初一','雾岛','一颗糖','晴天','木木','晚星','小鹿','青禾','橙子','云朵','念念']
 const bios=['花自向阳开，慢慢成为更好的自己','喜欢旅行、摄影和路边的小猫','把普通日子过得闪闪发光','周末看展，偶尔徒步','认真生活，也认真认识新朋友','生活需要一点浪漫和惊喜']
@@ -78,11 +78,11 @@ function openUser(item){uni.navigateTo({url:'/pages/user/index?name='+encodeURIC
 function enterRoom(item){uni.navigateTo({url:'/pages/room/index?name='+encodeURIComponent(item.name)})}
 function openChat(item){uni.navigateTo({url:'/pages/chat/index?name='+encodeURIComponent(item.name)})}
 function like(item){item.liked=!item.liked}
-function go(url){uni.navigateTo({url})}
+function go(url){uni.navigateTo({url})}\nfunction openFeature(type,name=''){uni.navigateTo({url:'/pages/feature/index?type='+encodeURIComponent(type)+'&name='+encodeURIComponent(name)})}
 function openSettings(){go('/pages/settings/index')}
 function openAuth(){go('/pages/auth/index')}
 function showNotice(){toast.value='暂时没有新通知'}
-function showSearch(){toast.value='搜索功能：可按昵称、兴趣和城市查找'}
+function showSearch(){openFeature('search')}
 function refreshList(){refreshing.value=true;setTimeout(()=>{users.value=[...users.value].sort(()=>Math.random()-.5);refreshing.value=false;toast.value='推荐已刷新';setTimeout(()=>toast.value='',1500)},700)}
 function loadMore(){if(loading.value)return;loading.value=true;setTimeout(()=>{const base=users.value.length;const extra=names.slice(0,10).map((name,i)=>({id:base+i+1,name:name+'·'+(Math.floor(base/10)+1),age:21+i%7,avatar:'/static/avatar'+(i%6+1)+'.svg',desc:bios[i%6],tags:tags[i%4],online:i%2===0,live:i%6===0,distance:(i+2)+' km',liked:false}));users.value.push(...extra);loading.value=false},800)}
 function onScroll(){const query=uni.createSelectorQuery();query.selectAll('.user-card').boundingClientRect(rects=>{if(!rects||!rects.length)return;const target=uni.getSystemInfoSync().windowHeight*.48;const hit=rects.find(r=>r.top<target&&r.bottom>target);boardingId.value=hit?users.value[rects.indexOf(hit)]?.id:''}).exec()}
