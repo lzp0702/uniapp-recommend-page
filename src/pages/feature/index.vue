@@ -33,6 +33,11 @@
       <view v-else-if="type==='account'" class="card"><view class="info-row"><text>手机号</text><b>未绑定</b></view><view class="info-row"><text>登录密码</text><b @tap="toast='请通过登录页的忘记密码功能重设'">修改 ›</b></view><view class="info-row"><text>账号状态</text><b>正常</b></view><view class="info-row"><text>注销账号</text><b class="danger" @tap="confirmDelete">申请注销 ›</b></view></view>
       <view v-else-if="type==='blacklist'" class="card"><view v-for="(person,i) in blocked" :key="person" class="person"><view class="avatar">{{person.slice(0,1)}}</view><view class="person-info"><b>{{person}}</b><small>已加入黑名单</small></view><text class="action" @tap="unblock(i)">移除</text></view><view v-if="!blocked.length" class="empty">黑名单为空，你可以安心认识新朋友</view></view>
       <view v-else-if="type==='about'||type==='agreement'" class="card legal"><view class="brand">遇见 MEET</view><b>{{type==='about'?'让每一次相遇都值得期待':'用户协议与隐私说明'}}</b><p>{{type==='about'?'遇见是一款帮助用户发现兴趣伙伴、分享生活和建立真实连接的社交产品。当前版本为可交互产品原型，账号、消息、音视频和直播服务尚未连接生产后端。':'请遵守法律法规与社区规范，尊重其他用户的意愿，不发布违法、骚扰、欺诈或侵犯他人权益的内容。个人资料和互动数据在当前演示版本中保存在本地设备。真实服务上线前需配置正式隐私政策、数据处理规则和用户申诉渠道。'}}</p><p>版本号：1.0.1</p></view>
+      <view v-else-if="['likes','following','visitors','matches','channel','topic'].includes(type)" class="card">
+        <view class="section">{{type==='likes'?'喜欢我的':type==='following'?'我的关注':type==='visitors'?'最近访客':type==='matches'?'今日匹配':type==='channel'?(routeName||'兴趣频道'):(routeName||'话题讨论')}}</view>
+        <view v-for="(u,i) in collection" :key="u" class="person" @tap="openUser(u)"><view class="avatar">{{u.slice(0,1)}}</view><view class="person-info"><b>{{u}}</b><small>{{type==='visitors'?'刚刚看过你的主页':type==='matches'?'与你有共同兴趣 · 匹配度 '+(96-i*4)+'%':type==='channel'?'兴趣相投 · 活跃用户':'期待与你交流'}}</small></view><text class="action" @tap.stop="openUser(u)">查看 ›</text></view>
+        <view v-if="type==='channel'||type==='topic'" class="topic-note">分享你的兴趣和生活，主动打个招呼，开启一段新的连接。</view>
+      </view>
       <view v-else class="card"><view class="empty">暂无内容</view></view>
     </view>
     <view v-if="toast" class="toast" @tap="toast=''">{{toast}}</view>
@@ -44,13 +49,13 @@ const type=ref(''),title=ref('功能'),toast=ref(''),keyword=ref(''),postText=re
 const actionLabel=ref('')
 const profile=ref({nickname:'遇见新朋友',city:'杭州',bio:'认真生活，慢慢遇见。',tags:'旅行 摄影 咖啡'})
 const allUsers=['浅安','小鱼','柒','江姜','早睡','优优','晚风','南栀','橘子海','林间','星野','桃桃']
-const filteredUsers=computed(()=>allUsers.filter(x=>!keyword.value||x.includes(keyword.value)))
+const filteredUsers=computed(()=>allUsers.filter(x=>!keyword.value||x.includes(keyword.value)))\nconst collection=computed(()=>type.value==='likes'?['小鱼','浅安','柒']:type.value==='following'?['江姜','晚风','南栀']:type.value==='visitors'?['橘子海','星野','桃桃']:type.value==='matches'?['优优','林间','知夏']:type.value==='channel'?['小鱼','可乐','山茶','青禾']:['浅安','晚星','小鹿','云朵'])
 const posts=ref([{text:'生活碎片：今天也要保持好奇心 ☀️',time:'今天 09:30',likes:23},{text:'周末的咖啡和一本好书。',time:'昨天 18:20',likes:16}])
 const blocked=ref(['测试用户A','测试用户B'])
 const toggles=ref({online:true,dm:true,distance:true,likes:true,messages:true,system:true,vibration:false,sound:true})
 const optionItems=computed(()=>type.value==='notifications'?[{key:'likes',title:'喜欢与关注',desc:'收到喜欢、关注时通知'},{key:'messages',title:'新消息提醒',desc:'收到私信时通知'},{key:'system',title:'系统通知',desc:'活动与安全提醒'}]:[{key:'sound',title:'提示音',desc:'播放消息提示音'},{key:'vibration',title:'振动反馈',desc:'收到消息时振动'}])
-const titles={search:'搜索',edit:'编辑资料',dynamic:'我的动态',verify:'实名认证',privacy:'隐私设置',notifications:'消息通知',general:'通用设置',account:'账号与安全',blacklist:'黑名单',about:'关于我们',agreement:'用户协议'}
-function onLoad(query){type.value=query.type||'about';title.value=titles[type.value]||'功能';actionLabel.value=type.value==='edit'?'保存':'';try{const p=uni.getStorageSync('meet-profile');if(p)profile.value=p;const t=uni.getStorageSync('meet-settings');if(t)toggles.value={...toggles.value,...t};const b=uni.getStorageSync('meet-blacklist');if(b)blocked.value=b;const ps=uni.getStorageSync('meet-posts');if(ps)posts.value=ps}catch(e){}}
+const titles={search:'搜索',edit:'编辑资料',dynamic:'我的动态',verify:'实名认证',privacy:'隐私设置',notifications:'消息通知',general:'通用设置',account:'账号与安全',blacklist:'黑名单',about:'关于我们',agreement:'用户协议',likes:'喜欢我的',following:'我的关注',visitors:'最近访客',matches:'今日匹配',channel:'兴趣频道',topic:'话题讨论'}
+function onLoad(query){type.value=query.type||'about';routeName.value=query.name||'';title.value=titles[type.value]||routeName.value||'功能';actionLabel.value=type.value==='edit'?'保存':'';try{const p=uni.getStorageSync('meet-profile');if(p)profile.value=p;const t=uni.getStorageSync('meet-settings');if(t)toggles.value={...toggles.value,...t};const b=uni.getStorageSync('meet-blacklist');if(b)blocked.value=b;const ps=uni.getStorageSync('meet-posts');if(ps)posts.value=ps}catch(e){}}
 onLoad(uni.getCurrentPages().slice(-1)[0]?.options||{})
 function back(){uni.navigateBack()}
 function toggle(k,v){toggles.value[k]=v;uni.setStorageSync('meet-settings',toggles.value)}
