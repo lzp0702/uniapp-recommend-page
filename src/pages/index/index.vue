@@ -58,7 +58,8 @@
 </template>
 
 <script setup>
-import {ref,computed,onShow} from 'vue'
+import {ref,computed} from 'vue'
+import {onShow} from '@dcloudio/uni-app'
 const statusHeight=ref(0)
 try { const info=uni.getSystemInfoSync(); statusHeight.value=info.statusBarHeight||0 } catch(e) { statusHeight.value=0 }
 const activeTab=ref(0),refreshing=ref(false),loading=ref(false),toast=ref(''),boardingId=ref(''),filterIndex=ref(0)
