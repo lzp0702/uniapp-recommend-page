@@ -49,7 +49,8 @@ const type=ref(''),title=ref('功能'),toast=ref(''),keyword=ref(''),postText=re
 const actionLabel=ref('')
 const profile=ref({nickname:'遇见新朋友',city:'杭州',bio:'认真生活，慢慢遇见。',tags:'旅行 摄影 咖啡'})
 const allUsers=['浅安','小鱼','柒','江姜','早睡','优优','晚风','南栀','橘子海','林间','星野','桃桃']
-const filteredUsers=computed(()=>allUsers.filter(x=>!keyword.value||x.includes(keyword.value)))\nconst collection=computed(()=>type.value==='likes'?['小鱼','浅安','柒']:type.value==='following'?['江姜','晚风','南栀']:type.value==='visitors'?['橘子海','星野','桃桃']:type.value==='matches'?['优优','林间','知夏']:type.value==='channel'?['小鱼','可乐','山茶','青禾']:['浅安','晚星','小鹿','云朵'])
+const filteredUsers=computed(()=>allUsers.filter(x=>!keyword.value||x.includes(keyword.value)))
+const collection=computed(()=>type.value==='likes'?['小鱼','浅安','柒']:type.value==='following'?['江姜','晚风','南栀']:type.value==='visitors'?['橘子海','星野','桃桃']:type.value==='matches'?['优优','林间','知夏']:type.value==='channel'?['小鱼','可乐','山茶','青禾']:['浅安','晚星','小鹿','云朵'])
 const posts=ref([{text:'生活碎片：今天也要保持好奇心 ☀️',time:'今天 09:30',likes:23},{text:'周末的咖啡和一本好书。',time:'昨天 18:20',likes:16}])
 const blocked=ref(['测试用户A','测试用户B'])
 const toggles=ref({online:true,dm:true,distance:true,likes:true,messages:true,system:true,vibration:false,sound:true})
