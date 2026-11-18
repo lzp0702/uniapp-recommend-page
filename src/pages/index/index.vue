@@ -2,7 +2,7 @@
 <view class="screen" :style="{'--safe-top':statusHeight+'px'}">
   <view class="ambient"></view>
   <view class="safe-top" :style="{height:statusHeight+'px'}"></view>
-  <view class="topbar">
+  <view v-if="activeTab!==2" class="topbar">
     <text class="heading">{{tabTitles[activeTab]}}</text>
     <view class="actions">
       <view class="action-box" @tap="openSettings"><text class="ticket">✦</text></view>
@@ -44,7 +44,7 @@
     <view class="chat-section-label">最近消息</view>
     <view v-for="m in filteredChats" :key="m.name" class="chat-swipe-wrap" @touchstart="chatTouchStart($event,m)" @touchend="chatTouchEnd($event,m)">
       <view class="chat-swipe-actions" v-if="m.actionOpen"><text @tap.stop="togglePin(m)">{{m.pinned?'取消置顶':'置顶'}}</text><text class="unread-action" @tap.stop="toggleUnread(m)">{{m.unread?'标为已读':'标为未读'}}</text><text class="delete-action" @tap.stop="removeChat(m)">删除</text></view>
-      <view class="chat-row" :class="{pinned:m.pinned}" @tap="m.actionOpen?m.actionOpen=false:openChat(m)">
+      <view class="chat-row" :class="{pinned:m.pinned}" :style="{transform:m.actionOpen?'translateX(-198px)':'translateX(0)'}" @tap="m.actionOpen?m.actionOpen=false:openChat(m)">
         <view class="chat-avatar"><image :src="m.avatar" mode="aspectFill"/></view><view class="chat-info"><view class="chat-name-line"><b>{{m.remark||m.name}}</b><text v-if="m.muted" class="mute-mark">⌁</text></view><small>{{m.last}}</small></view><view class="chat-meta"><small>{{m.time}}</small><i v-if="m.unread">{{m.unread>99?'99+':m.unread}}</i><text v-else-if="m.muted" class="mute-mark">⌁</text></view>
       </view>
     </view>
@@ -130,7 +130,7 @@ function onScroll(){const query=uni.createSelectorQuery();query.selectAll('.user
 .my-head{margin:0 -17px;padding:20px 22px 25px;background:linear-gradient(120deg,#d9e9ff,#f4d9f0);border-radius:0 0 26px 26px}.my-top{display:flex;justify-content:space-between;font-size:11px;color:#9a87aa}.my-profile{display:flex;align-items:center;gap:12px;margin-top:25px}.my-avatar{width:62px;height:62px;border:3px solid white;font-size:22px}.my-name{display:block;font-size:18px;font-weight:900}.my-profile small{display:block;font-size:10px;color:#888;margin-top:5px}.edit{margin-left:auto;color:#aa80b5;font-size:11px}.completion{margin-top:20px;font-size:10px;color:#8c8196}.completion b{float:right}.progress{height:5px;border-radius:5px;background:#ffffffaa;margin-top:8px}.progress i{display:block;width:65%;height:100%;border-radius:5px;background:linear-gradient(90deg,#ed9bc5,#a89bf0)}.my-stats{display:flex;justify-content:space-around;padding:20px 0;background:#ffffffbd;border-radius:18px;margin-top:14px}.my-stats b,.my-stats small{display:block;text-align:center}.my-stats b{font-size:18px}.my-stats small{font-size:10px;color:#999;margin-top:4px}.menu{background:#ffffffc7;border-radius:18px;margin-top:15px;padding:0 16px}.menu view{height:51px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f3edf5;font-size:12px}.menu view:last-child{border:0}.menu view text:last-child{font-size:20px;color:#bbb}
 .toast{position:absolute;z-index:20;bottom:calc(82px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);max-width:85%;white-space:nowrap;background:#282337e8;color:white;padding:10px 18px;border-radius:22px;font-size:12px}.safe-end{height:12px}
 
-.message-page{background:#fff!important;color:#191919!important;padding:0!important}
+.message-page{top:calc(var(--safe-top,0px) + 0px)!important;background:#fff!important;color:#191919!important;padding:0!important}
 .message-nav{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 17px;background:#f7f7f7;border-bottom:1px solid #eee}
 .message-title{font-size:20px;font-weight:650;color:#171717}
 .message-nav-actions{display:flex;gap:22px;font-size:27px;color:#222;align-items:center}
