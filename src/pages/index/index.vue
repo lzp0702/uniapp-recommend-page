@@ -81,7 +81,7 @@ function like(item){item.liked=!item.liked}
 function go(url){uni.navigateTo({url})}
 function openFeature(type,name=''){uni.navigateTo({url:'/pages/feature/index?type='+encodeURIComponent(type)+'&name='+encodeURIComponent(name)})}
 function openSettings(){go('/pages/settings/index')}
-function openAuth(){go('/pages/auth/index')}
+function openAuth(){openFeature('edit')}
 function showNotice(){toast.value='暂时没有新通知'}
 function showSearch(){openFeature('search')}
 function refreshList(){refreshing.value=true;setTimeout(()=>{users.value=[...users.value].sort(()=>Math.random()-.5);refreshing.value=false;toast.value='推荐已刷新';setTimeout(()=>toast.value='',1500)},700)}
