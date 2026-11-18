@@ -1,5 +1,5 @@
 <template>
-<view class="chat-page">
+<view class="chat-page" :style="{background:chatBg}">
   <view class="topbar"><text class="back" @tap="back">‹</text><view class="top-title"><text class="title">{{name}}</text><text class="online">{{peerStatus}}</text></view><text class="more" @tap="chatMenu">···</text></view>
   <scroll-view class="message-scroll" scroll-y :scroll-into-view="lastMessageId" :scroll-with-animation="true">
     <view class="history-hint" @tap="toast='暂时没有更多历史消息'">— 以上是打招呼的内容 —</view>
@@ -62,13 +62,14 @@
 <script setup>
 import{ref,nextTick,computed}from'vue'
 import{onLoad,onShow}from'@dcloudio/uni-app'
-const name=ref('小鱼'),draft=ref(''),toast=ref(''),showTools=ref(false),showEmoji=ref(false),packetModal=ref(false),transferModal=ref(false) ,pollModal=ref(false),settingsVisible=ref(false),searchModal=ref(false),searchKeyword=ref(''),muted=ref(false),pinned=ref(false),packetType=ref('normal'),moneyAmount=ref(''),moneyGreeting=ref('恭喜发财，大吉大利') ,peerStatus=ref('对方在线'),lastMessageId=ref(''),myAvatar=ref('/static/avatar1.svg'),peerAvatar=ref('/static/avatar2.svg')
+const chatBg=ref('#ededed')
+const name=ref('小鱼'),draft=ref(''),toast=ref(''),showTools=ref(false),showEmoji=ref(false),emojiExpanded=ref(false),emojiTab=ref('emoji'),recentEmojis=ref(['😂','❤️','🥰','👍','😊','😭','🎉','🙏','✨','😍','😉','🌹']),packetModal=ref(false),transferModal=ref(false),settingsVisible=ref(false),searchModal=ref(false),searchKeyword=ref(''),muted=ref(false),pinned=ref(false),packetType=ref('normal'),moneyAmount=ref(''),moneyGreeting=ref('恭喜发财，大吉大利') ,peerStatus=ref('对方在线'),lastMessageId=ref(''),myAvatar=ref('/static/avatar1.svg'),peerAvatar=ref('/static/avatar2.svg')
 const searchResults=computed(()=>list.value.filter(m=>(m.text||m.title||'').toLowerCase().includes(searchKeyword.value.toLowerCase())))
 const emojis=['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','☺️','😚','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🥵','🥶','😵','🤯','🤠','🥳','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👻','👽','🤖','🎃','😺','😸','😹','😻','😼','😽','🙀','😿','😾','❤️','🧡','💛','💚','💙','💜','🖤','🤍','💔','💕','💞','💓','💗','💖','💘','💝','💟','👍','👎','👌','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','👇','☝️','✋','🤚','🖐️','🖖','👋','🤏','💪','🙏','👏','🙌','👐','🤲','🤝','💅','🎉','✨','🔥','🌹','🌸','☀️','🌈','🍀','🐱']
 const list=ref([{id:1,text:'嗨，刚刚看到你的动态～',mine:false},{id:2,text:'你好呀，很高兴认识你',mine:true},{id:3,text:'你也喜欢旅行吗？',mine:false}])
 function storageKey(){return'meet-chat-'+name.value}
 function loadMessages(){try{const saved=uni.getStorageSync(storageKey());if(saved)list.value=saved}catch(e){}}
-onLoad((q={})=>{if(q.name)name.value=decodeURIComponent(q.name);loadMessages();muted.value=!!uni.getStorageSync('meet-chat-muted-'+name.value);pinned.value=!!uni.getStorageSync('meet-chat-pinned-'+name.value);scrollBottom()})
+onLoad((q={})=>{if(q.name)name.value=decodeURIComponent(q.name);loadMessages();chatBg.value=uni.getStorageSync('meet-chat-bg-'+name.value)||'#ededed';muted.value=!!uni.getStorageSync('meet-chat-muted-'+name.value);pinned.value=!!uni.getStorageSync('meet-chat-pinned-'+name.value);scrollBottom()})
 onShow(()=>loadMessages())
 function persist(){uni.setStorageSync(storageKey(),list.value);try{const chats=uni.getStorageSync('meet-chat-list')||[];const item=chats.find(x=>x.name===name.value);const last=list.value[list.value.length-1];if(item&&last){item.last=last.text||last.title||(last.kind==='image'?'[图片]':last.kind==='redpacket'?'[红包]':last.kind==='transfer'?'[转账]':'[消息]');item.time='刚刚';item.unread=0;uni.setStorageSync('meet-chat-list',chats)}}catch(e){}scrollBottom()}
 function scrollBottom(){nextTick(()=>{lastMessageId.value='';nextTick(()=>{lastMessageId.value='message-bottom'})})}
@@ -92,7 +93,7 @@ function searchHistory(){settingsVisible.value=false;searchKeyword.value='';sear
 function jumpToMessage(m){searchModal.value=false;const i=list.value.indexOf(m);lastMessageId.value='msg-'+i}
 function toggleMute(){muted.value=!muted.value;uni.setStorageSync('meet-chat-muted-'+name.value,muted.value);settingsVisible.value=false;toast.value=muted.value?'已开启消息免打扰':'已恢复消息提醒'}
 function toggleTop(){pinned.value=!pinned.value;uni.setStorageSync('meet-chat-pinned-'+name.value,pinned.value);settingsVisible.value=false;toast.value=pinned.value?'已置顶聊天':'已取消置顶'}
-function changeBackground(){settingsVisible.value=false;uni.showActionSheet({itemList:['默认背景','浅灰背景','暖白背景'],success:r=>{const colors=['#ededed','#e9eef2','#f5f1eb'];uni.setStorageSync('meet-chat-bg-'+name.value,colors[r.tapIndex]);toast.value='聊天背景已更新'}})}
+function changeBackground(){settingsVisible.value=false;uni.showActionSheet({itemList:['默认背景','浅灰背景','暖白背景'],success:r=>{const colors=['#ededed','#e9eef2','#f5f1eb'];uni.setStorageSync('meet-chat-bg-'+name.value,colors[r.tapIndex]);chatBg.value=colors[r.tapIndex];toast.value='聊天背景已更新'}})}
 function clearHistory(){settingsVisible.value=false;uni.showModal({title:'清空聊天记录',content:'确定清空本机保存的聊天记录吗？',success:x=>{if(x.confirm){list.value=[];uni.removeStorageSync(storageKey())}}})}
 function messageActions(m,i){const actions=['复制','收藏','转发','删除'];if(m.kind==='image')actions[0]='查看图片';uni.showActionSheet({itemList:actions,success:r=>{if(r.tapIndex===0){if(m.kind==='image')previewImage(m.text);else if(typeof uni.setClipboardData==='function')uni.setClipboardData({data:m.text||m.title||''});else toast.value='当前环境不支持复制'}if(r.tapIndex===1){const saved=uni.getStorageSync('meet-favorites')||[];saved.unshift({...m,savedAt:Date.now(),chatName:name.value});uni.setStorageSync('meet-favorites',saved);toast.value='已收藏'}if(r.tapIndex===2){uni.showActionSheet({itemList:['转发给其他好友'],success:()=>{toast.value='转发对象选择需要接入联系人列表'}})}if(r.tapIndex===3){list.value.splice(i,1);persist()}}})}
 function back(){uni.navigateBack()}
