@@ -73,7 +73,8 @@ const names=['浅安','小鱼','柒','江姜','早睡','优优','晚风','南栀
 const bios=['花自向阳开，慢慢成为更好的自己','喜欢旅行、摄影和路边的小猫','把普通日子过得闪闪发光','周末看展，偶尔徒步','认真生活，也认真认识新朋友','生活需要一点浪漫和惊喜']
 const tags=[['旅行','摄影','咖啡'],['王者荣耀','电影','音乐'],['宠物','美食','徒步'],['阅读','看展','城市漫步']]
 const users=ref(names.map((name,i)=>({id:i+1,name,age:20+i%8,avatar:'/static/avatar'+(i%6+1)+'.svg',desc:bios[i%bios.length],tags:tags[i%tags.length],online:i%3!==0,live:i%7===2,distance:(i+1)+' km',liked:false})))
-const displayUsers=users\nfunction openUser(item){uni.navigateTo({url:'/pages/user/index?name='+encodeURIComponent(item.name)})}
+const displayUsers=users
+function openUser(item){uni.navigateTo({url:'/pages/user/index?name='+encodeURIComponent(item.name)})}
 function enterRoom(item){uni.navigateTo({url:'/pages/room/index?name='+encodeURIComponent(item.name)})}
 function openChat(item){uni.navigateTo({url:'/pages/chat/index?name='+encodeURIComponent(item.name)})}
 function like(item){item.liked=!item.liked}
