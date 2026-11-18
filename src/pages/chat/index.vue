@@ -54,7 +54,7 @@ function storageKey(){return'meet-chat-'+name.value}
 function loadMessages(){try{const saved=uni.getStorageSync(storageKey());if(saved)list.value=saved}catch(e){}}
 onLoad((q={})=>{if(q.name)name.value=decodeURIComponent(q.name);loadMessages();muted.value=!!uni.getStorageSync('meet-chat-muted-'+name.value);pinned.value=!!uni.getStorageSync('meet-chat-pinned-'+name.value);scrollBottom()})
 onShow(()=>loadMessages())
-function persist(){uni.setStorageSync(storageKey(),list.value);scrollBottom()}
+function persist(){uni.setStorageSync(storageKey(),list.value);try{const chats=uni.getStorageSync('meet-chat-list')||[];const item=chats.find(x=>x.name===name.value);const last=list.value[list.value.length-1];if(item&&last){item.last=last.text||last.title||(last.kind==='image'?'[图片]':last.kind==='redpacket'?'[红包]':last.kind==='transfer'?'[转账]':last.kind==='poll'?'[投票]':'[消息]');item.time='刚刚';item.unread=0;uni.setStorageSync('meet-chat-list',chats)}}catch(e){}scrollBottom()}
 function scrollBottom(){nextTick(()=>{lastMessageId.value='';nextTick(()=>{lastMessageId.value='message-bottom'})})}
 function send(){const value=draft.value.trim();if(!value)return;if(list.value.length>=500){toast.value='聊天记录太多，请清理后再发送';return}list.value.push({id:Date.now(),text:value,mine:true,time:Date.now()});draft.value='';showTools.value=false;showEmoji.value=false;persist()}
 function choosePhoto(){uni.chooseImage({count:9,sizeType:['compressed'],success:r=>{r.tempFilePaths.forEach((src,i)=>list.value.push({id:Date.now()+i,text:src,mine:true,kind:'image'}));persist();showTools.value=false}})}
