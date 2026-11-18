@@ -1,183 +1,91 @@
 <template>
-  <view class="screen">
-    <view class="ambient"></view>
-
-    <!-- 参考 Vant NavBar：固定高度、左右插槽、中间标题；不绘制模拟系统状态栏 -->
-    <view class="navbar">
-      <view class="nav-left">
-        <text class="nav-mark">推荐</text>
-      </view>
-      <view class="nav-title">推荐</view>
-      <view class="nav-right">
-        <view class="nav-action ticket-action"><text>★</text></view>
-        <view class="nav-action notice-action"><text>♟</text></view>
-        <view class="search-action">⌕</view>
-      </view>
+<view class="screen">
+  <view class="ambient"></view>
+  <view class="safe-top" :style="{height:statusHeight+'px'}"></view>
+  <view class="topbar">
+    <text class="heading">{{tabTitles[activeTab]}}</text>
+    <view class="actions">
+      <view class="action-box" @tap="openSettings"><text class="ticket">✦</text></view>
+      <view class="action-box" @tap="showNotice"><text class="bell">♧</text></view>
+      <text class="search" @tap="showSearch">⌕</text>
     </view>
+  </view>
 
-    <scroll-view class="feed" scroll-y :show-scrollbar="false">
-      <view v-for="(item,index) in users" :key="item.name" class="user-card" :class="{live:item.live}">
-        <image class="avatar" :src="item.avatar" mode="aspectFill" />
+  <view v-if="activeTab===0" class="feed-wrap">
+    <scroll-view class="feed" scroll-y :show-scrollbar="false" :refresher-enabled="true" :refresher-triggered="refreshing" lower-threshold="120" @refresherrefresh="refreshList" @scrolltolower="loadMore" @scroll="onScroll">
+      <view class="banner"><view><text class="banner-kicker">TODAY'S CONNECTION</text><text class="banner-title">遇见同频的你</text><text class="banner-sub">每一次滑动，都可能遇见心动</text></view><text class="banner-orb">♡</text></view>
+      <view class="filter-row"><text class="filter active">为你推荐</text><text class="filter">附近的人</text><text class="filter">刚刚活跃</text><text class="filter">兴趣相投</text></view>
+      <view v-for="item in users" :key="item.id" class="user-card" :class="{boarding:boardingId===item.id}" @tap="openUser(item)">
+        <image class="avatar" :src="item.avatar" mode="aspectFill"/>
         <view class="user-content">
-          <view class="name-line">
-            <text class="name" :class="{serif:item.serif}">{{item.name}}</text>
-            <text class="role" :class="{purple:item.live}">{{item.role}}</text>
-            <text class="gender">♀{{item.age || ''}}</text>
-          </view>
-          <text v-if="item.desc" class="desc">{{item.desc}}</text>
-          <view v-if="item.tags.length" class="tags">
-            <text v-for="tag in item.tags" :key="tag" class="tag"><text class="hash">#</text>{{tag}}</text>
-          </view>
-          <view v-if="item.live" class="live-bottom">
-            <view class="wave"><i v-for="(h,n) in wave" :key="n" :style="{height:h+'rpx'}"></i></view>
-            <view class="pause">Ⅱ</view>
-            <view class="enter" @tap="enterRoom(item)">跟随进厅</view>
-          </view>
+          <view class="name-line"><text class="name">{{item.name}}</text><text class="role" :class="{purple:item.live}">{{item.live?'直播中':'交友'}}</text><text class="gender">♀ {{item.age}}</text></view>
+          <text class="desc">{{item.desc}}</text>
+          <view class="tags"><text v-for="tag in item.tags" :key="tag" class="tag"># {{tag}}</text></view>
+          <view class="card-bottom"><text class="online"><i></i>{{item.online?'在线':'刚刚活跃'}}</text><text class="distance">{{item.distance}}</text><text v-if="item.live" class="enter" @tap.stop="enterRoom(item)">跟随进厅 ↗</text><text v-else class="like" @tap.stop="like(item)">♡ {{item.liked?'已喜欢':'喜欢'}}</text></view>
         </view>
       </view>
+      <view class="loading">{{loading?'正在加载更多…': '已经到底啦，换个筛选继续发现'}}</view>
       <view class="safe-end"></view>
     </scroll-view>
-
-    <view class="tabbar">
-      <view v-for="(tab,i) in tabs" :key="tab.label" class="tab" @tap="activeTab=i">
-        <view class="tab-icon" :class="{selected:activeTab===i}">
-          <text>{{tab.icon}}</text>
-          <text v-if="i===2" class="count">99+</text>
-        </view>
-        <text class="tab-label" :class="{active:activeTab===i}">{{tab.label}}</text>
-      </view>
-    </view>
-    <view v-if="toast" class="toast">{{toast}}</view>
+    <view class="light-gate"><view class="gate-line"></view><text>MEET YOUR MOMENT</text></view>
   </view>
+
+  <scroll-view v-else-if="activeTab===1" class="subpage" scroll-y>
+    <view class="discover-hero"><text class="banner-kicker">EXPLORE MORE</text><text class="banner-title">发现精彩</text><text class="banner-sub">从兴趣开始，认识新的朋友</text></view>
+    <view class="section-title">探索频道</view>
+    <view class="channel-grid"><view v-for="(c,i) in channels" :key="c.name" class="channel" :class="'c'+i" @tap="toast=c.name+'频道即将开放'"><text>{{c.icon}}</text><b>{{c.name}}</b><small>{{c.desc}}</small></view></view>
+    <view class="section-title">今日话题</view><view v-for="topic in topics" :key="topic" class="topic" @tap="toast='已进入话题：'+topic"># {{topic}} <text>参与讨论 ›</text></view>
+  </scroll-view>
+
+  <scroll-view v-else-if="activeTab===2" class="subpage" scroll-y>
+    <view class="message-head"><text class="banner-kicker">YOUR CONNECTIONS</text><text class="banner-title">消息</text><text class="banner-sub">每一次回应，都是新的开始</text></view>
+    <view class="quick-actions"><view @tap="toast='暂无新的喜欢'">♡<small>喜欢我的</small></view><view @tap="toast='暂无新的访客'">◉<small>最近访客</small></view><view @tap="toast='暂无新的匹配'">✦<small>新的匹配</small></view></view>
+    <view class="section-title">最近聊天 <text class="muted">全部消息</text></view>
+    <view v-for="(m,i) in chats" :key="m.name" class="chat-row" @tap="openChat(m)"><view class="chat-avatar">{{m.name.slice(0,1)}}</view><view class="chat-info"><b>{{m.name}}</b><small>{{m.last}}</small></view><view class="chat-meta"><small>{{m.time}}</small><i v-if="i===0">2</i></view></view>
+  </scroll-view>
+
+  <scroll-view v-else class="subpage" scroll-y>
+    <view class="my-head"><view class="my-top"><text class="banner-kicker">MY SPACE</text><text @tap="openSettings">⚙ 设置</text></view><view class="my-profile"><view class="my-avatar">B</view><view><text class="my-name">遇见新朋友</text><small>完善资料，让更多人认识你</small></view><text class="edit" @tap="openAuth">编辑 ›</text></view><view class="completion"><view><text>资料完整度</text><b>65%</b></view><view class="progress"><i></i></view></view></view>
+    <view class="my-stats"><view><b>0</b><small>获赞</small></view><view><b>0</b><small>关注</small></view><view><b>0</b><small>访客</small></view></view>
+    <view class="menu"><view v-for="m in myMenus" :key="m.name" @tap="m.url?go(m.url):toast=m.name+'功能即将开放'"><text>{{m.icon}}　{{m.name}}</text><text>›</text></view></view>
+  </scroll-view>
+
+  <view class="tabbar">
+    <view v-for="(t,i) in tabs" :key="t.label" class="tab" @tap="activeTab=i"><text class="tab-icon" :class="{selected:activeTab===i}">{{t.icon}}</text><text class="tab-label" :class="{active:activeTab===i}">{{t.label}}</text><i v-if="i===2" class="badge-dot"></i></view>
+  </view>
+  <view v-if="toast" class="toast" @tap="toast=''">{{toast}}</view>
+</view>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-const users = ref([
- {name:'c.浅安',role:'交友',age:'21',avatar:'/static/avatar1.svg',desc:'',tags:[],serif:true},
- {name:'QY.小鱼',role:'交友',age:'21',avatar:'/static/avatar2.svg',desc:'花自向阳开 我比你想象中要坚韧',tags:['王者荣耀','cosplay','steam'],serif:true},
- {name:'柒',role:'个播',age:'',avatar:'/static/avatar3.svg',desc:'',tags:['摄影','素食主义','旅行'],live:true},
- {name:'江姜',role:'个播',age:'24',avatar:'/static/avatar4.svg',desc:'没有个性',tags:['看电影','萌宠','动漫']},
- {name:'H.早睡',role:'个播',age:'25',avatar:'/static/avatar5.svg',desc:'压抑的情绪、压抑的生活',tags:['睡觉','王者荣耀'],serif:true},
- {name:'优优💕优乐美',role:'个播',age:'20',avatar:'/static/avatar6.svg',desc:'幸福就是 你们在我身边',tags:['看电影','王者荣耀','追剧']}
-])
-const wave=[18,28,14,34,22,42,20,32,16,38,24,44,19,31,15,26,36,18,29,13,22,34]
-const tabs=[{label:'首页',icon:'⌂'},{label:'娱乐',icon:'☻'},{label:'消息',icon:'☷'},{label:'我',icon:'♧'}]
-const activeTab=ref(0), toast=ref('')
-function enterRoom(item){ toast.value=`正在进入${item.name}的直播间`; setTimeout(()=>toast.value='',1600) }
+import {ref} from 'vue'
+const statusHeight=ref(0)
+try { const info=uni.getSystemInfoSync(); statusHeight.value=info.statusBarHeight||0 } catch(e) { statusHeight.value=0 }
+const activeTab=ref(0),refreshing=ref(false),loading=ref(false),toast=ref(''),boardingId=ref('')
+const tabTitles=['推荐','发现','消息','我的']
+const tabs=[{label:'推荐',icon:'⌂'},{label:'发现',icon:'✧'},{label:'消息',icon:'♡'},{label:'我的',icon:'◉'}]
+const channels=[{icon:'♡',name:'同城交友',desc:'发现身边的缘分'},{icon:'♫',name:'兴趣社群',desc:'找到同好伙伴'},{icon:'◉',name:'语音派对',desc:'用声音认识彼此'},{icon:'✦',name:'直播互动',desc:'分享此刻精彩'}]
+const topics=['周末去哪儿玩','分享最近喜欢的歌','理想中的第一次约会']
+const myMenus=[{icon:'▧',name:'我的动态'},{icon:'♡',name:'我的喜欢'},{icon:'♧',name:'我的关注'},{icon:'◇',name:'实名认证'},{icon:'⚙',name:'账号与设置',url:'/pages/settings/index'}]
+const chats=ref([{name:'小鱼',last:'周末一起去看展吗？',time:'刚刚'},{name:'江姜',last:'哈哈哈哈太有意思了',time:'10:24'},{name:'柒',last:'欢迎来我的直播间～',time:'昨天'},{name:'安安',last:'你好，很高兴认识你',time:'周一'}])
+const names=['浅安','小鱼','柒','江姜','早睡','优优','晚风','南栀','橘子海','林间','星野','桃桃','阿梨','七月','小满','可乐','山茶','知夏','月亮','初一','雾岛','一颗糖','晴天','木木','晚星','小鹿','青禾','橙子','云朵','念念']
+const bios=['花自向阳开，慢慢成为更好的自己','喜欢旅行、摄影和路边的小猫','把普通日子过得闪闪发光','周末看展，偶尔徒步','认真生活，也认真认识新朋友','生活需要一点浪漫和惊喜']
+const tags=[['旅行','摄影','咖啡'],['王者荣耀','电影','音乐'],['宠物','美食','徒步'],['阅读','看展','城市漫步']]
+const users=ref(names.map((name,i)=>({id:i+1,name,age:20+i%8,avatar:'/static/avatar'+(i%6+1)+'.svg',desc:bios[i%bios.length],tags:tags[i%tags.length],online:i%3!==0,live:i%7===2,distance:(i+1)+' km',liked:false})))
+function openUser(item){uni.navigateTo({url:'/pages/user/index?name='+encodeURIComponent(item.name)})}
+function enterRoom(item){uni.navigateTo({url:'/pages/room/index?name='+encodeURIComponent(item.name)})}
+function openChat(item){uni.navigateTo({url:'/pages/chat/index?name='+encodeURIComponent(item.name)})}
+function like(item){item.liked=!item.liked}
+function go(url){uni.navigateTo({url})}
+function openSettings(){go('/pages/settings/index')}
+function openAuth(){go('/pages/auth/index')}
+function showNotice(){toast.value='暂时没有新通知'}
+function showSearch(){toast.value='搜索功能：可按昵称、兴趣和城市查找'}
+function refreshList(){refreshing.value=true;setTimeout(()=>{users.value=[...users.value].sort(()=>Math.random()-.5);refreshing.value=false;toast.value='推荐已刷新';setTimeout(()=>toast.value='',1500)},700)}
+function loadMore(){if(loading.value)return;loading.value=true;setTimeout(()=>{const base=users.value.length;const extra=names.slice(0,10).map((name,i)=>({id:base+i+1,name:name+'·'+(Math.floor(base/10)+1),age:21+i%7,avatar:'/static/avatar'+(i%6+1)+'.svg',desc:bios[i%6],tags:tags[i%4],online:i%2===0,live:i%6===0,distance:(i+2)+' km',liked:false}));users.value.push(...extra);loading.value=false},800)}
+function onScroll(){const query=uni.createSelectorQuery();query.selectAll('.user-card').boundingClientRect(rects=>{if(!rects||!rects.length)return;const target=uni.getSystemInfoSync().windowHeight*.48;const hit=rects.find(r=>r.top<target&&r.bottom>target);boardingId.value=hit?users.value[rects.indexOf(hit)]?.id:''}).exec()}
 </script>
 
 <style lang="scss" scoped>
-.screen {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100vh;
-  height: 100dvh;
-  min-height: 0;
-  overflow: hidden;
-  color: #24212e;
-  background: linear-gradient(145deg,#d9e9ff 0%,#f5d9f5 36%,#e6eaff 68%,#d8f4ff 100%);
-  box-sizing: border-box;
-}
-.ambient {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: .65;
-  background: repeating-linear-gradient(132deg,rgba(255,255,255,.24) 0,rgba(255,255,255,.24) 1px,transparent 1px,transparent 8px),radial-gradient(ellipse at 75% 28%,rgba(255,255,255,.9),transparent 40%),radial-gradient(ellipse at 5% 82%,rgba(255,255,255,.7),transparent 38%);
-}
-/* Vant NavBar 的核心尺寸与左右插槽布局 */
-.navbar {
-  position: relative;
-  z-index: 2;
-  flex: 0 0 46px;
-  height: 46px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  box-sizing: border-box;
-  background: rgba(255,255,255,.18);
-  border-bottom: 1px solid rgba(255,255,255,.42);
-  backdrop-filter: blur(14px);
-}
-.nav-left,.nav-right { display:flex; align-items:center; min-width:72px; height:100%; }
-.nav-left { justify-content:flex-start; }
-.nav-right { justify-content:flex-end; gap:12px; }
-.nav-mark { font-size:14px; color:rgba(74,66,91,.72); }
-.nav-title { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); max-width:55%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:17px; line-height:24px; font-weight:600; color:#282435; }
-.nav-action { width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:rgba(255,255,255,.55); box-shadow:0 2px 8px rgba(91,79,132,.08); }
-.ticket-action { color:#8f8be9; font-size:16px; }
-.notice-action { color:#ed8abd; font-size:17px; }
-.search-action { width:26px; text-align:center; color:#716b82; font-size:30px; line-height:30px; transform:rotate(-20deg); }
-.feed {
-  position: relative;
-  z-index: 1;
-  flex: 1 1 0;
-  min-height: 0;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 14px 4.3% 0;
-}
-.user-card {
-  display:flex;
-  align-items:center;
-  min-height:154px;
-  margin:0 0 18px;
-  padding:16px 16px 16px 20px;
-  box-sizing:border-box;
-  border-radius:62px;
-  background:linear-gradient(110deg,rgba(255,255,255,.68),rgba(255,255,255,.34));
-  border:1.5px solid rgba(255,255,255,.82);
-  box-shadow:inset 0 1px 7px rgba(255,255,255,.8),0 8px 24px rgba(255,255,255,.18);
-  backdrop-filter:blur(12px);
-}
-.avatar { width:clamp(76px, 23vw, 110px); height:clamp(76px, 23vw, 110px); flex-shrink:0; border-radius:50%; border:3px solid rgba(255,255,255,.95); box-shadow:0 2px 8px rgba(107,93,144,.16); box-sizing:border-box; }
-.user-content { min-width:0; flex:1; margin-left:14px; }
-.name-line { display:flex; align-items:center; gap:6px; min-width:0; white-space:nowrap; }
-.name { max-width:55%; overflow:hidden; text-overflow:ellipsis; font-size:clamp(17px,5vw,23px); font-weight:800; letter-spacing:.2px; }
-.name.serif { font-family:Georgia,serif; font-style:italic; }
-.role { flex-shrink:0; font-size:12px; font-weight:800; color:#fff; background:linear-gradient(100deg,#ff8fb8,#f4a0c5); border-radius:13px; padding:3px 8px; }
-.role.purple { background:linear-gradient(100deg,#df7ce9,#b58cf4); }
-.gender { flex-shrink:0; font-size:14px; color:#e879b6; font-weight:600; }
-.desc { display:block; color:#77717d; font-size:13px; line-height:19px; margin-top:9px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.tags { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
-.tag { font-size:11px; line-height:18px; color:#77717e; background:rgba(255,255,255,.58); padding:2px 7px; border-radius:14px; white-space:nowrap; }
-.hash { color:#e77db7; margin-right:2px; }
-.user-card.live { min-height:170px; border:2px solid rgba(255,255,255,.95); box-shadow:inset 0 0 10px rgba(255,255,255,.9),0 0 17px rgba(255,255,255,.7); }
-.live-bottom { height:34px; display:flex; align-items:center; margin-top:6px; }
-.wave { height:30px; display:flex; align-items:flex-end; gap:3px; opacity:.72; overflow:hidden; }
-.wave i { width:3px; border-radius:4px; background:#c59af4; }
-.pause { margin-left:auto; margin-right:8px; color:#df8cc9; font-weight:900; font-size:16px; }
-.enter { flex-shrink:0; background:linear-gradient(100deg,#ff9ab8,#f06eaa); color:white; font-size:13px; padding:8px 13px; border-radius:24px; box-shadow:0 3px 9px rgba(239,116,177,.22); }
-.safe-end { height:12px; }
-.tabbar {
-  position:relative;
-  z-index:3;
-  flex:0 0 calc(62px + env(safe-area-inset-bottom));
-  min-height:62px;
-  padding:8px 3% env(safe-area-inset-bottom);
-  box-sizing:content-box;
-  display:flex;
-  justify-content:space-around;
-  background:rgba(255,255,255,.96);
-  box-shadow:0 -5px 22px rgba(255,255,255,.38);
-}
-.tab { width:25%; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:2px; }
-.tab-icon { height:34px; position:relative; color:#c8c6d1; font-size:28px; line-height:34px; }
-.tab-icon.selected { color:#df75bb; text-shadow:0 2px 3px #e8b8e1; }
-.tab-label { font-size:12px; line-height:18px; color:#c3c0ca; }
-.tab-label.active { color:#e47fba; }
-.count { position:absolute; top:-2px; left:19px; background:#f05c68; color:white; border-radius:14px; font-size:9px; line-height:14px; padding:0 4px; border:1px solid white; }
-.toast { position:absolute; z-index:5; bottom:calc(82px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); max-width:80%; white-space:nowrap; background:rgba(40,35,55,.78); color:white; padding:10px 18px; border-radius:22px; font-size:13px; }
-@media (max-height:700px) {
-  .feed { padding-top:10px; }
-  .user-card { min-height:124px; margin-bottom:10px; padding-top:12px; padding-bottom:12px; }
-  .avatar { width:76px; height:76px; }
-  .user-card.live { min-height:145px; }
-  .desc { margin-top:5px; }
-  .tags { margin-top:6px; }
-}
+.screen{position:relative;display:flex;flex-direction:column;width:100%;height:100vh;height:100dvh;overflow:hidden;color:#302b3e;background:linear-gradient(145deg,#d9e9ff,#f5d9f5 38%,#e6eaff 70%,#d8f4ff);box-sizing:border-box}.ambient{position:absolute;inset:0;pointer-events:none;opacity:.55;background:radial-gradient(ellipse at 75% 25%,#fff,transparent 42%),radial-gradient(ellipse at 5% 82%,#fff,transparent 38%)}.safe-top{flex-shrink:0;position:relative;z-index:2}.topbar{height:88px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 6.5%;position:relative;z-index:2}.heading{font-size:36px;font-weight:1000;font-style:italic;letter-spacing:2px;text-shadow:1px 2px 1px #5a3f772e}.actions{display:flex;align-items:center;gap:20px}.action-box{width:48px;height:50px;border-radius:17px;background:#ffffff55;box-shadow:0 5px 20px #fff5;display:flex;align-items:center;justify-content:center}.ticket{font-size:22px;color:#8b8cf3}.bell{font-size:25px;color:#f17db7}.search{font-size:40px;color:white;transform:rotate(-20deg)}.feed-wrap{position:relative;flex:1;min-height:0}.feed,.subpage{height:100%;box-sizing:border-box}.feed{padding:0 4.3%}.banner,.discover-hero,.message-head{display:flex;flex-direction:column;padding:18px 22px;margin-bottom:14px;border-radius:24px;background:linear-gradient(110deg,#ffffff9c,#ffffff45);border:1px solid #fff9;box-shadow:0 8px 22px #a9a0c01c}.banner-kicker{font-size:9px;letter-spacing:2px;color:#a38eb8}.banner-title{font-size:24px;font-weight:900;margin:7px 0 4px}.banner-sub{font-size:11px;color:#898294}.banner-orb{position:absolute;right:42px;top:100px;font-size:52px;color:#d88fc7;opacity:.6}.filter-row{display:flex;gap:9px;overflow:hidden;margin:12px 0 16px}.filter{font-size:11px;padding:8px 13px;border-radius:18px;background:#ffffff65;color:#92899c;white-space:nowrap}.filter.active{background:#fff;color:#d36eae;box-shadow:0 3px 10px #d8b4d133}.user-card{position:relative;display:flex;align-items:center;min-height:148px;margin:0 0 15px;padding:15px 14px 15px 17px;border-radius:48px;background:linear-gradient(110deg,#ffffffb0,#ffffff58);border:1.5px solid #fffD;box-shadow:inset 0 1px 7px #fffC,0 8px 24px #ffffff35;backdrop-filter:blur(12px);transition:transform .25s,box-shadow .25s}.user-card.boarding{transform:scale(1.012);border:2px solid #fff;box-shadow:0 0 0 2px #e8a6e8,0 0 18px 5px #d98be6aa,inset 0 0 15px #fff;animation:flowGlow 2.1s linear infinite}.user-card.boarding:after{content:'';position:absolute;inset:-3px;border-radius:50px;border:2px solid transparent;border-top-color:#fff;border-right-color:#cba8ff;filter:drop-shadow(0 0 5px #d17be9);pointer-events:none}@keyframes flowGlow{50%{box-shadow:0 0 0 2px #b5c5ff,0 0 23px 7px #a98df0aa,inset 0 0 18px #fff}}.avatar{width:clamp(72px,22vw,100px);height:clamp(72px,22vw,100px);flex-shrink:0;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px #6b5d9029}.user-content{min-width:0;flex:1;margin-left:13px}.name-line{display:flex;align-items:center;gap:6px;white-space:nowrap}.name{max-width:48%;overflow:hidden;text-overflow:ellipsis;font-size:19px;font-weight:850}.role{font-size:10px;color:#fff;background:linear-gradient(100deg,#ff8fb8,#f4a0c5);border-radius:13px;padding:3px 7px}.role.purple{background:linear-gradient(100deg,#df7ce9,#b58cf4)}.gender{font-size:12px;color:#e879b6}.desc{display:block;color:#77717d;font-size:11px;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tags{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}.tag{font-size:9px;color:#77717e;background:#ffffff9c;padding:4px 7px;border-radius:14px;white-space:nowrap}.card-bottom{display:flex;align-items:center;gap:9px;margin-top:9px;font-size:10px;color:#9c93a5}.online{display:flex;align-items:center;gap:4px}.online i{width:6px;height:6px;border-radius:50%;background:#70cfa7}.enter,.like{margin-left:auto;color:#d779b3}.enter{background:linear-gradient(100deg,#ff9ab8,#f06eaa);color:white;padding:6px 10px;border-radius:20px}.loading{text-align:center;color:#a49bad;font-size:10px;padding:16px}.light-gate{position:absolute;left:5%;right:5%;top:48%;height:1px;pointer-events:none;z-index:4;opacity:.8}.gate-line{height:1px;background:linear-gradient(90deg,transparent,#fff,#d99bea,#fff,transparent);box-shadow:0 0 10px #d78ce9}.light-gate text{position:absolute;right:10px;top:-14px;font-size:7px;letter-spacing:2px;color:#b78dc5;background:#f3e7f5aa;padding:3px 6px;border-radius:10px}.tabbar{z-index:5;flex-shrink:0;height:62px;padding:7px 3% env(safe-area-inset-bottom);box-sizing:content-box;display:flex;justify-content:space-around;background:#ffffffed;box-shadow:0 -5px 22px #ffffff61}.tab{width:25%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative}.tab-icon{font-size:25px;line-height:30px;color:#c8c6d1}.tab-icon.selected{color:#df75bb;text-shadow:0 2px 3px #e8b8e1}.tab-label{font-size:10px;color:#c3c0ca}.tab-label.active{color:#e47fba}.badge-dot{position:absolute;top:3px;right:28%;width:6px;height:6px;background:#f06e8d;border-radius:50%}.subpage{position:relative;z-index:1;flex:1;padding:8px 17px 20px}.discover-hero{min-height:120px;justify-content:center}.section-title{font-size:16px;font-weight:800;margin:20px 3px 12px}.channel-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.channel{height:108px;border-radius:20px;padding:14px;background:#ffffffad;display:flex;flex-direction:column;justify-content:space-between}.channel text{font-size:24px;color:#d781ba}.channel b{font-size:14px}.channel small{font-size:10px;color:#999}.c1 text{color:#9a9ce8}.c2 text{color:#8ec9c6}.c3 text{color:#e8a17d}.topic{padding:17px;background:#ffffffad;border-radius:15px;margin:9px 0;font-size:13px;color:#9d73ad}.topic text{float:right;color:#aaa;font-size:10px}.message-head{margin:0 -1px 15px}.quick-actions{display:flex;justify-content:space-around;padding:17px 5px;background:#ffffffad;border-radius:18px;color:#d47db4;font-size:22px}.quick-actions view{text-align:center}.quick-actions small{display:block;font-size:10px;color:#92899c;margin-top:7px}.muted{float:right;color:#aaa;font-size:10px;font-weight:400}.chat-row{display:flex;align-items:center;padding:13px 5px;border-bottom:1px solid #ffffffa8;gap:12px}.chat-avatar,.my-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(140deg,#c5dfff,#f3c7e6);display:grid;place-items:center;color:#9a78b1;font-weight:800}.chat-info{flex:1;min-width:0}.chat-info b,.chat-info small{display:block}.chat-info b{font-size:13px}.chat-info small{font-size:10px;color:#999;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chat-meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px;color:#aaa;font-size:9px}.chat-meta i{font-style:normal;background:#ee8db6;color:white;border-radius:10px;padding:2px 6px}.my-head{margin:0 -17px;padding:20px 22px 25px;background:linear-gradient(120deg,#d9e9ff,#f4d9f0);border-radius:0 0 26px 26px}.my-top{display:flex;justify-content:space-between;font-size:11px;color:#9a87aa}.my-profile{display:flex;align-items:center;gap:12px;margin-top:25px}.my-avatar{width:62px;height:62px;border:3px solid white;font-size:22px}.my-name{display:block;font-size:18px;font-weight:900}.my-profile small{display:block;font-size:10px;color:#888;margin-top:5px}.edit{margin-left:auto;color:#aa80b5;font-size:11px}.completion{margin-top:20px;font-size:10px;color:#8c8196}.completion b{float:right}.progress{height:5px;border-radius:5px;background:#ffffffaa;margin-top:8px}.progress i{display:block;width:65%;height:100%;border-radius:5px;background:linear-gradient(90deg,#ed9bc5,#a89bf0)}.my-stats{display:flex;justify-content:space-around;padding:20px 0;background:#ffffffad;border-radius:18px;margin-top:14px}.my-stats b,.my-stats small{display:block;text-align:center}.my-stats b{font-size:18px}.my-stats small{font-size:10px;color:#999;margin-top:4px}.menu{background:#ffffffb5;border-radius:18px;margin-top:15px;padding:0 16px}.menu view{height:51px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f3edf5;font-size:12px}.menu view:last-child{border:0}.menu view text:last-child{font-size:20px;color:#bbb}.toast{position:absolute;z-index:8;bottom:90px;left:50%;transform:translateX(-50%);max-width:85%;white-space:nowrap;background:#282337d9;color:white;padding:10px 18px;border-radius:22px;font-size:12px}.safe-end{height:12px}
 </style>
