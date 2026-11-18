@@ -21,7 +21,7 @@
   <view v-if="selectedMessage" class="message-context-mask" @tap="closeMessageMenu"><view class="context-card" @tap.stop><view class="reaction-strip"><text v-for="e in quickReactions" :key="e" @tap="reactTo(selectedMessage,e)">{{e}}</text></view><view class="context-actions"><view @tap="replyMessage">回复 <text>↩</text></view><view @tap="copyMessage">复制 <text>▢</text></view><view @tap="forwardMessage">转发 <text>➦</text></view><view @tap="favoriteMessage">收藏 <text>☆</text></view><view class="danger" @tap="deleteMessage">删除 <text>⌫</text></view></view></view></view>
   <view class="composer" :class="{'panel-open':showEmoji||showTools}">
     <view class="composer-face" @tap="showEmoji=!showEmoji;showTools=false">☺</view>
-    <textarea v-model="draft" class="message-input" maxlength="-1" auto-height confirm-type="send" cursor-spacing="8" placeholder="发送消息" @linechange="onInputLineChange" @confirm="send"/>
+    <textarea v-model="draft" class="message-input" maxlength="-1" auto-height confirm-type="send" cursor-spacing="8" placeholder="发送消息" @confirm="send"/>
     <view v-if="!draft.trim()" class="plus-button" @tap="showTools=!showTools;showEmoji=false">＋</view>
     <view v-else class="send-button" @tap="send">发送</view>
   </view>
