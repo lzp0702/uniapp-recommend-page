@@ -15,7 +15,7 @@
       <view class="attach" @tap="toast='图片选择已打开（演示模式）'">＋ 添加照片</view>
       <button class="primary" @tap="publish">发布动态</button>
       <view class="section">我的动态</view>
-      <view v-for="(p,i) in posts" :key="i" class="post"><text>{{p.text}}</text><small>{{p.time}} · ♡ {{p.likes}}</small></view>
+      <view v-for="(p,i) in posts" :key="p.id||i" class="post"><text>{{p.text}}</text><small>{{p.time}} · <text @tap="likePost(p)">♡ {{p.likes}}</text> · <text @tap="commentPost(p)">评论 {{p.comments?.length||0}}</text></small><view v-for="(cm,j) in p.comments" :key="j" class="comment">{{cm}}</view></view>
     </view>
     <view v-else-if="type==='verify'" class="card">
       <view class="verify-icon">✓</view><view class="center-title">完成身份认证</view><view class="muted">认证后可获得专属标识，提升资料可信度</view>
@@ -45,13 +45,13 @@
 </template>
 <script setup>
 import {ref,computed} from 'vue'
-const type=ref(''),title=ref('功能'),toast=ref(''),keyword=ref(''),postText=ref(''),realName=ref(''),idNumber=ref('')
+const type=ref(''),title=ref('功能'),toast=ref(''),keyword=ref(''),postText=ref(''),realName=ref(''),idNumber=ref(''),routeName=ref('')
 const actionLabel=ref('')
 const profile=ref({nickname:'遇见新朋友',city:'杭州',bio:'认真生活，慢慢遇见。',tags:'旅行 摄影 咖啡'})
 const allUsers=['浅安','小鱼','柒','江姜','早睡','优优','晚风','南栀','橘子海','林间','星野','桃桃']
-const filteredUsers=computed(()=>allUsers.filter(x=>!keyword.value||x.includes(keyword.value)))
+const filteredUsers=computed(()=>allUsers.filter(x=>!keyword.value||x.includes(keyword.value)||['旅行','摄影','咖啡','音乐','电影','徒步','美食'].some(t=>t.includes(keyword.value))))
 const collection=computed(()=>type.value==='likes'?['小鱼','浅安','柒']:type.value==='following'?['江姜','晚风','南栀']:type.value==='visitors'?['橘子海','星野','桃桃']:type.value==='matches'?['优优','林间','知夏']:type.value==='channel'?['小鱼','可乐','山茶','青禾']:['浅安','晚星','小鹿','云朵'])
-const posts=ref([{text:'生活碎片：今天也要保持好奇心 ☀️',time:'今天 09:30',likes:23},{text:'周末的咖啡和一本好书。',time:'昨天 18:20',likes:16}])
+const posts=ref([{id:1,text:'生活碎片：今天也要保持好奇心 ☀️',time:'今天 09:30',likes:23,liked:false,comments:['今天也要开心！']},{id:2,text:'周末的咖啡和一本好书。',time:'昨天 18:20',likes:16,liked:false,comments:[]}])
 const blocked=ref(['测试用户A','测试用户B'])
 const toggles=ref({online:true,dm:true,distance:true,likes:true,messages:true,system:true,vibration:false,sound:true})
 const optionItems=computed(()=>type.value==='notifications'?[{key:'likes',title:'喜欢与关注',desc:'收到喜欢、关注时通知'},{key:'messages',title:'新消息提醒',desc:'收到私信时通知'},{key:'system',title:'系统通知',desc:'活动与安全提醒'}]:[{key:'sound',title:'提示音',desc:'播放消息提示音'},{key:'vibration',title:'振动反馈',desc:'收到消息时振动'}])
@@ -61,9 +61,11 @@ onLoad(uni.getCurrentPages().slice(-1)[0]?.options||{})
 function back(){uni.navigateBack()}
 function toggle(k,v){toggles.value[k]=v;uni.setStorageSync('meet-settings',toggles.value)}
 function save(){uni.setStorageSync('meet-profile',profile.value);toast.value='资料已保存在本机'}
-function publish(){if(!postText.value.trim()){toast.value='先写下你的动态内容';return}posts.value.unshift({text:postText.value.trim(),time:'刚刚',likes:0});uni.setStorageSync('meet-posts',posts.value);postText.value='';toast.value='动态发布成功'}
+function publish(){if(!postText.value.trim()){toast.value='先写下你的动态内容';return}posts.value.unshift({id:Date.now(),text:postText.value.trim(),time:'刚刚',likes:0,liked:false,comments:[]});uni.setStorageSync('meet-posts',posts.value);postText.value='';toast.value='动态发布成功'}
+function likePost(p){p.liked=!p.liked;p.likes=Math.max(0,p.likes+(p.liked?1:-1));uni.setStorageSync('meet-posts',posts.value)}
+function commentPost(p){uni.showModal({title:'评论动态',editable:true,placeholderText:'写下你的评论',success:r=>{if(r.confirm&&r.content?.trim()){p.comments=p.comments||[];p.comments.push(r.content.trim());uni.setStorageSync('meet-posts',posts.value)}}})}
 function verify(){if(!realName.value.trim()||idNumber.value.trim().length<8){toast.value='请填写姓名和有效证件号码';return}toast.value='资料格式已通过演示校验，正式认证需接入服务端'}
-function search(){if(!keyword.value.trim())toast.value='请输入搜索关键词'}
+function search(){if(!keyword.value.trim())toast.value='请输入搜索关键词';else toast.value='已找到 '+filteredUsers.value.length+' 位相关用户'}
 function openUser(u){uni.navigateTo({url:'/pages/user/index?name='+encodeURIComponent(u)})}
 function unblock(i){blocked.value.splice(i,1);uni.setStorageSync('meet-blacklist',blocked.value);toast.value='已移出黑名单'}
 function confirmDelete(){toast.value='注销申请需完成身份验证后提交'}
