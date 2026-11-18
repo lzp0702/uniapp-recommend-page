@@ -45,6 +45,7 @@
 </template>
 <script setup>
 import {ref,computed} from 'vue'
+import {onLoad} from '@dcloudio/uni-app'
 const type=ref(''),title=ref('功能'),toast=ref(''),keyword=ref(''),postText=ref(''),realName=ref(''),idNumber=ref(''),routeName=ref('')
 const actionLabel=ref('')
 const profile=ref({nickname:'遇见新朋友',city:'杭州',bio:'认真生活，慢慢遇见。',tags:'旅行 摄影 咖啡',avatar:''})
@@ -56,8 +57,22 @@ const blocked=ref(['测试用户A','测试用户B'])
 const toggles=ref({online:true,dm:true,distance:true,likes:true,messages:true,system:true,vibration:false,sound:true})
 const optionItems=computed(()=>type.value==='notifications'?[{key:'likes',title:'喜欢与关注',desc:'收到喜欢、关注时通知'},{key:'messages',title:'新消息提醒',desc:'收到私信时通知'},{key:'system',title:'系统通知',desc:'活动与安全提醒'}]:[{key:'sound',title:'提示音',desc:'播放消息提示音'},{key:'vibration',title:'振动反馈',desc:'收到消息时振动'}])
 const titles={search:'搜索',edit:'编辑资料',dynamic:'我的动态',verify:'实名认证',privacy:'隐私设置',notifications:'消息通知',general:'通用设置',account:'账号与安全',blacklist:'黑名单',about:'关于我们',agreement:'用户协议',likes:'喜欢我的',following:'我的关注',visitors:'最近访客',matches:'今日匹配',channel:'兴趣频道',topic:'话题讨论'}
-function onLoad(query){type.value=query.type||'about';routeName.value=query.name||'';title.value=titles[type.value]||routeName.value||'功能';actionLabel.value=type.value==='edit'?'保存':'';try{const p=uni.getStorageSync('meet-profile');if(p)profile.value=p;const t=uni.getStorageSync('meet-settings');if(t)toggles.value={...toggles.value,...t};const b=uni.getStorageSync('meet-blacklist');if(b)blocked.value=b;const ps=uni.getStorageSync('meet-posts');if(ps)posts.value=ps}catch(e){}}
-onLoad(uni.getCurrentPages().slice(-1)[0]?.options||{})
+onLoad((query={})=>{
+  type.value=query.type||'about'
+  routeName.value=query.name||''
+  title.value=titles[type.value]||routeName.value||'功能'
+  actionLabel.value=type.value==='edit'?'保存':''
+  try{
+    const p=uni.getStorageSync('meet-profile')
+    if(p)profile.value={...profile.value,...p}
+    const t=uni.getStorageSync('meet-settings')
+    if(t)toggles.value={...toggles.value,...t}
+    const b=uni.getStorageSync('meet-blacklist')
+    if(b)blocked.value=b
+    const ps=uni.getStorageSync('meet-posts')
+    if(ps)posts.value=ps
+  }catch(e){}
+})
 function back(){uni.navigateBack()}
 function toggle(k,v){toggles.value[k]=v;uni.setStorageSync('meet-settings',toggles.value)}
 function save(){uni.setStorageSync('meet-profile',profile.value);toast.value='资料已保存在本机'}
