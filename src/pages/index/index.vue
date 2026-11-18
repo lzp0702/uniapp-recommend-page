@@ -61,7 +61,8 @@
 import {ref} from 'vue'
 const statusHeight=ref(0)
 try { const info=uni.getSystemInfoSync(); statusHeight.value=info.statusBarHeight||0 } catch(e) { statusHeight.value=0 }
-const activeTab=ref(0),refreshing=ref(false),loading=ref(false),toast=ref(''),boardingId=ref(''),filterIndex=ref(0)\nconst filters=['为你推荐','附近的人','刚刚活跃','兴趣相投']
+const activeTab=ref(0),refreshing=ref(false),loading=ref(false),toast=ref(''),boardingId=ref(''),filterIndex=ref(0)
+const filters=['为你推荐','附近的人','刚刚活跃','兴趣相投']
 const tabTitles=['推荐','发现','消息','我的']
 const tabs=[{label:'推荐',icon:'⌂'},{label:'发现',icon:'✧'},{label:'消息',icon:'♡'},{label:'我的',icon:'◉'}]
 const channels=[{icon:'♡',name:'同城交友',desc:'发现身边的缘分'},{icon:'♫',name:'兴趣社群',desc:'找到同好伙伴'},{icon:'◉',name:'语音派对',desc:'用声音认识彼此'},{icon:'✦',name:'直播互动',desc:'分享此刻精彩'}]
