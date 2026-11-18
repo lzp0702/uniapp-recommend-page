@@ -51,12 +51,12 @@
 <script setup>
 import { ref } from 'vue'
 const users = ref([
- {name:'c.浅安',role:'交友',age:'21',avatar:'/static/avatar1.jpg',desc:'',tags:[],serif:true},
- {name:'QY.小鱼',role:'交友',age:'21',avatar:'/static/avatar2.jpg',desc:'花自向阳开 我比你想象中要坚韧',tags:['王者荣耀','cosplay','steam'],serif:true},
- {name:'柒',role:'个播',age:'',avatar:'/static/avatar3.jpg',desc:'',tags:['摄影','素食主义','旅行'],live:true},
- {name:'江姜',role:'个播',age:'24',avatar:'/static/avatar4.jpg',desc:'没有个性',tags:['看电影','萌宠','动漫']},
- {name:'H.早睡',role:'个播',age:'25',avatar:'/static/avatar5.jpg',desc:'压抑的情绪、压抑的生活',tags:['睡觉','王者荣耀'],serif:true},
- {name:'优优💕优乐美',role:'个播',age:'20',avatar:'/static/avatar6.jpg',desc:'幸福就是 你们在我身边',tags:['看电影','王者荣耀','追剧']}
+ {name:'c.浅安',role:'交友',age:'21',avatar:'/static/avatar1.svg',desc:'',tags:[],serif:true},
+ {name:'QY.小鱼',role:'交友',age:'21',avatar:'/static/avatar2.svg',desc:'花自向阳开 我比你想象中要坚韧',tags:['王者荣耀','cosplay','steam'],serif:true},
+ {name:'柒',role:'个播',age:'',avatar:'/static/avatar3.svg',desc:'',tags:['摄影','素食主义','旅行'],live:true},
+ {name:'江姜',role:'个播',age:'24',avatar:'/static/avatar4.svg',desc:'没有个性',tags:['看电影','萌宠','动漫']},
+ {name:'H.早睡',role:'个播',age:'25',avatar:'/static/avatar5.svg',desc:'压抑的情绪、压抑的生活',tags:['睡觉','王者荣耀'],serif:true},
+ {name:'优优💕优乐美',role:'个播',age:'20',avatar:'/static/avatar6.svg',desc:'幸福就是 你们在我身边',tags:['看电影','王者荣耀','追剧']}
 ])
 const wave=[18,28,14,34,22,42,20,32,16,38,24,44,19,31,15,26,36,18,29,13,22,34]
 const tabs=[{label:'首页',icon:'⌂'},{label:'娱乐',icon:'☻'},{label:'消息',icon:'☷'},{label:'我',icon:'♧'}]
