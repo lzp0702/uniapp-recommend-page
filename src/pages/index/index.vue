@@ -1,18 +1,20 @@
 <template>
   <view class="screen">
     <view class="ambient"></view>
-    <view class="status">
-      <text class="clock">15:22</text>
-      <view class="status-right"><text>▮▮▮</text><text class="wifi">◔</text><text class="battery">88%</text></view>
-    </view>
-    <view class="topbar">
-      <text class="heading">推荐</text>
-      <view class="actions">
-        <view class="action-box"><text class="ticket">★</text></view>
-        <view class="action-box"><text class="bell">♟</text></view>
-        <text class="search">⌕</text>
+
+    <!-- 参考 Vant NavBar：固定高度、左右插槽、中间标题；不绘制模拟系统状态栏 -->
+    <view class="navbar">
+      <view class="nav-left">
+        <text class="nav-mark">推荐</text>
+      </view>
+      <view class="nav-title">推荐</view>
+      <view class="nav-right">
+        <view class="nav-action ticket-action"><text>★</text></view>
+        <view class="nav-action notice-action"><text>♟</text></view>
+        <view class="search-action">⌕</view>
       </view>
     </view>
+
     <scroll-view class="feed" scroll-y :show-scrollbar="false">
       <view v-for="(item,index) in users" :key="item.name" class="user-card" :class="{live:item.live}">
         <image class="avatar" :src="item.avatar" mode="aspectFill" />
@@ -35,6 +37,7 @@
       </view>
       <view class="safe-end"></view>
     </scroll-view>
+
     <view class="tabbar">
       <view v-for="(tab,i) in tabs" :key="tab.label" class="tab" @tap="activeTab=i">
         <view class="tab-icon" :class="{selected:activeTab===i}">
@@ -65,20 +68,116 @@ function enterRoom(item){ toast.value=`正在进入${item.name}的直播间`; se
 </script>
 
 <style lang="scss" scoped>
-.screen{position:relative;height:100vh;min-height:620px;overflow:hidden;color:#24212e;background:linear-gradient(145deg,#d9e9ff 0%,#f5d9f5 36%,#e6eaff 68%,#d8f4ff 100%);}
-.ambient{position:absolute;inset:0;pointer-events:none;opacity:.65;background:repeating-linear-gradient(132deg,rgba(255,255,255,.24) 0,rgba(255,255,255,.24) 1px,transparent 1px,transparent 8px),radial-gradient(ellipse at 75% 28%,rgba(255,255,255,.9),transparent 40%),radial-gradient(ellipse at 5% 82%,rgba(255,255,255,.7),transparent 38%);}
-.status{height:calc(env(safe-area-inset-top) + 34px);padding:env(safe-area-inset-top) 8.5% 0;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1;color:#080811;font-weight:700;}
-.clock{font-size:20px}.status-right{display:flex;align-items:center;gap:9px;font-size:16px}.wifi{font-size:22px}.battery{background:#38bd68;color:white;border-radius:5px;padding:1px 5px;font-size:14px}
-.topbar{height:100px;display:flex;align-items:center;justify-content:space-between;padding:0 6.5%;position:relative;z-index:1}
-.heading{font-size:38px;font-weight:1000;font-style:italic;letter-spacing:2px;text-shadow:1px 2px 1px rgba(90,63,119,.18)}
-.actions{display:flex;align-items:center;gap:24px}.action-box{width:54px;height:58px;border-radius:18px;background:rgba(255,255,255,.28);box-shadow:0 5px 20px rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center}.ticket{font-size:22px;color:white;background:linear-gradient(140deg,#9edbff,#8b8cf3);padding:7px 10px;border-radius:7px}.bell{font-size:26px;color:#f17db7;text-shadow:0 2px 7px #f5a8d3}.search{font-size:43px;color:white;line-height:1;transform:rotate(-20deg)}
-.feed{position:relative;z-index:1;height:calc(100vh - env(safe-area-inset-top) - 34px - 100px - 104px);padding:0 4.3%;}
-.user-card{position:relative;display:flex;align-items:center;min-height:154px;margin:0 0 22px;padding:18px 20px 18px 28px;border-radius:62px;background:linear-gradient(110deg,rgba(255,255,255,.58),rgba(255,255,255,.28));border:1.5px solid rgba(255,255,255,.78);box-shadow:inset 0 1px 7px rgba(255,255,255,.8),0 8px 24px rgba(255,255,255,.18);backdrop-filter:blur(12px);}
-.avatar{width:110px;height:110px;flex-shrink:0;border-radius:50%;border:3px solid rgba(255,255,255,.95);box-shadow:0 2px 8px rgba(107,93,144,.16);}
-.user-content{min-width:0;flex:1;margin-left:16px}.name-line{display:flex;align-items:center;gap:7px;white-space:nowrap}.name{font-size:24px;font-weight:800;letter-spacing:.2px}.name.serif{font-family:Georgia,serif;font-style:italic}.role{font-size:15px;font-weight:800;color:#fff;background:linear-gradient(100deg,#ff8fb8,#f4a0c5);border-radius:13px;padding:3px 10px}.role.purple{background:linear-gradient(100deg,#df7ce9,#b58cf4)}.gender{font-size:18px;color:#e879b6;font-weight:600}.desc{display:block;color:#77717d;font-size:17px;margin-top:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tags{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.tag{font-size:14px;color:#77717e;background:rgba(255,255,255,.48);padding:4px 9px;border-radius:14px;white-space:nowrap}.hash{color:#e77db7;margin-right:3px}
-.user-card.live{min-height:178px;margin-top:0;border:2px solid rgba(255,255,255,.95);box-shadow:inset 0 0 10px rgba(255,255,255,.9),0 0 17px rgba(255,255,255,.7);padding-top:20px;padding-bottom:18px}.live-bottom{height:39px;display:flex;align-items:center;position:relative;margin-top:7px}.wave{height:35px;display:flex;align-items:flex-end;gap:4px;opacity:.72}.wave i{width:4px;border-radius:4px;background:#c59af4}.pause{margin-left:auto;margin-right:10px;color:#df8cc9;font-weight:900;font-size:18px}.enter{background:linear-gradient(100deg,#ff9ab8,#f06eaa);color:white;font-size:16px;padding:9px 18px;border-radius:24px;box-shadow:0 3px 9px rgba(239,116,177,.22)}
-.safe-end{height:22px}
-.tabbar{position:absolute;z-index:3;bottom:0;left:0;right:0;height:calc(104px + env(safe-area-inset-bottom));padding:10px 3% env(safe-area-inset-bottom);display:flex;justify-content:space-around;background:rgba(255,255,255,.96);box-shadow:0 -5px 22px rgba(255,255,255,.38)}.tab{width:25%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px}.tab-icon{height:48px;position:relative;color:#c8c6d1;font-size:34px;line-height:44px}.tab-icon.selected{color:#df75bb;text-shadow:0 2px 3px #e8b8e1}.tab-label{font-size:17px;color:#c3c0ca}.tab-label.active{color:#e47fba}.count{position:absolute;top:-3px;left:25px;background:#f05c68;color:white;border-radius:14px;font-size:12px;line-height:18px;padding:0 5px;border:1px solid white}
-.toast{position:absolute;z-index:5;bottom:130px;left:50%;transform:translateX(-50%);background:rgba(40,35,55,.78);color:white;padding:10px 18px;border-radius:22px;font-size:14px}
-@media (max-height:700px){.user-card{min-height:130px;margin-bottom:12px}.avatar{width:90px;height:90px}.user-card.live{min-height:150px}.name{font-size:21px}.desc{font-size:14px}.tag{font-size:12px}.feed{height:calc(100vh - env(safe-area-inset-top) - 34px - 85px - 90px)}.topbar{height:85px}.tabbar{height:90px}}
+.screen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  color: #24212e;
+  background: linear-gradient(145deg,#d9e9ff 0%,#f5d9f5 36%,#e6eaff 68%,#d8f4ff 100%);
+  box-sizing: border-box;
+}
+.ambient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .65;
+  background: repeating-linear-gradient(132deg,rgba(255,255,255,.24) 0,rgba(255,255,255,.24) 1px,transparent 1px,transparent 8px),radial-gradient(ellipse at 75% 28%,rgba(255,255,255,.9),transparent 40%),radial-gradient(ellipse at 5% 82%,rgba(255,255,255,.7),transparent 38%);
+}
+/* Vant NavBar 的核心尺寸与左右插槽布局 */
+.navbar {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  box-sizing: border-box;
+  background: rgba(255,255,255,.18);
+  border-bottom: 1px solid rgba(255,255,255,.42);
+  backdrop-filter: blur(14px);
+}
+.nav-left,.nav-right { display:flex; align-items:center; min-width:72px; height:100%; }
+.nav-left { justify-content:flex-start; }
+.nav-right { justify-content:flex-end; gap:12px; }
+.nav-mark { font-size:14px; color:rgba(74,66,91,.72); }
+.nav-title { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); max-width:55%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:17px; line-height:24px; font-weight:600; color:#282435; }
+.nav-action { width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:rgba(255,255,255,.55); box-shadow:0 2px 8px rgba(91,79,132,.08); }
+.ticket-action { color:#8f8be9; font-size:16px; }
+.notice-action { color:#ed8abd; font-size:17px; }
+.search-action { width:26px; text-align:center; color:#716b82; font-size:30px; line-height:30px; transform:rotate(-20deg); }
+.feed {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 4.3% 0;
+}
+.user-card {
+  display:flex;
+  align-items:center;
+  min-height:154px;
+  margin:0 0 18px;
+  padding:16px 16px 16px 20px;
+  box-sizing:border-box;
+  border-radius:62px;
+  background:linear-gradient(110deg,rgba(255,255,255,.68),rgba(255,255,255,.34));
+  border:1.5px solid rgba(255,255,255,.82);
+  box-shadow:inset 0 1px 7px rgba(255,255,255,.8),0 8px 24px rgba(255,255,255,.18);
+  backdrop-filter:blur(12px);
+}
+.avatar { width:clamp(76px, 23vw, 110px); height:clamp(76px, 23vw, 110px); flex-shrink:0; border-radius:50%; border:3px solid rgba(255,255,255,.95); box-shadow:0 2px 8px rgba(107,93,144,.16); box-sizing:border-box; }
+.user-content { min-width:0; flex:1; margin-left:14px; }
+.name-line { display:flex; align-items:center; gap:6px; min-width:0; white-space:nowrap; }
+.name { max-width:55%; overflow:hidden; text-overflow:ellipsis; font-size:clamp(17px,5vw,23px); font-weight:800; letter-spacing:.2px; }
+.name.serif { font-family:Georgia,serif; font-style:italic; }
+.role { flex-shrink:0; font-size:12px; font-weight:800; color:#fff; background:linear-gradient(100deg,#ff8fb8,#f4a0c5); border-radius:13px; padding:3px 8px; }
+.role.purple { background:linear-gradient(100deg,#df7ce9,#b58cf4); }
+.gender { flex-shrink:0; font-size:14px; color:#e879b6; font-weight:600; }
+.desc { display:block; color:#77717d; font-size:13px; line-height:19px; margin-top:9px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tags { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+.tag { font-size:11px; line-height:18px; color:#77717e; background:rgba(255,255,255,.58); padding:2px 7px; border-radius:14px; white-space:nowrap; }
+.hash { color:#e77db7; margin-right:2px; }
+.user-card.live { min-height:170px; border:2px solid rgba(255,255,255,.95); box-shadow:inset 0 0 10px rgba(255,255,255,.9),0 0 17px rgba(255,255,255,.7); }
+.live-bottom { height:34px; display:flex; align-items:center; margin-top:6px; }
+.wave { height:30px; display:flex; align-items:flex-end; gap:3px; opacity:.72; overflow:hidden; }
+.wave i { width:3px; border-radius:4px; background:#c59af4; }
+.pause { margin-left:auto; margin-right:8px; color:#df8cc9; font-weight:900; font-size:16px; }
+.enter { flex-shrink:0; background:linear-gradient(100deg,#ff9ab8,#f06eaa); color:white; font-size:13px; padding:8px 13px; border-radius:24px; box-shadow:0 3px 9px rgba(239,116,177,.22); }
+.safe-end { height:12px; }
+.tabbar {
+  position:relative;
+  z-index:3;
+  flex:0 0 calc(62px + env(safe-area-inset-bottom));
+  min-height:62px;
+  padding:8px 3% env(safe-area-inset-bottom);
+  box-sizing:content-box;
+  display:flex;
+  justify-content:space-around;
+  background:rgba(255,255,255,.96);
+  box-shadow:0 -5px 22px rgba(255,255,255,.38);
+}
+.tab { width:25%; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:2px; }
+.tab-icon { height:34px; position:relative; color:#c8c6d1; font-size:28px; line-height:34px; }
+.tab-icon.selected { color:#df75bb; text-shadow:0 2px 3px #e8b8e1; }
+.tab-label { font-size:12px; line-height:18px; color:#c3c0ca; }
+.tab-label.active { color:#e47fba; }
+.count { position:absolute; top:-2px; left:19px; background:#f05c68; color:white; border-radius:14px; font-size:9px; line-height:14px; padding:0 4px; border:1px solid white; }
+.toast { position:absolute; z-index:5; bottom:calc(82px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); max-width:80%; white-space:nowrap; background:rgba(40,35,55,.78); color:white; padding:10px 18px; border-radius:22px; font-size:13px; }
+@media (max-height:700px) {
+  .feed { padding-top:10px; }
+  .user-card { min-height:124px; margin-bottom:10px; padding-top:12px; padding-bottom:12px; }
+  .avatar { width:76px; height:76px; }
+  .user-card.live { min-height:145px; }
+  .desc { margin-top:5px; }
+  .tags { margin-top:6px; }
+}
 </style>
