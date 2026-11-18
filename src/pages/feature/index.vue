@@ -46,7 +46,7 @@
 <script setup>
 import {ref,computed} from 'vue'
 import {onLoad} from '@dcloudio/uni-app'
-const type=ref(''),title=ref('功能'),toast=ref(''),keyword=ref(''),postText=ref(''),realName=ref(''),idNumber=ref(''),routeName=ref('')
+const type=ref(''),title=ref('功能'),toast=ref(''),keyword=ref(''),postText=ref(''),postImages=ref([]),realName=ref(''),idNumber=ref(''),routeName=ref('')
 const actionLabel=ref('')
 const profile=ref({nickname:'遇见新朋友',city:'杭州',bio:'认真生活，慢慢遇见。',tags:'旅行 摄影 咖啡',avatar:''})
 const allUsers=['浅安','小鱼','柒','江姜','早睡','优优','晚风','南栀','橘子海','林间','星野','桃桃']
