@@ -1,5 +1,5 @@
 <template>
-<view class="screen">
+<view class="screen" :style="{'--safe-top':statusHeight+'px'}">
   <view class="ambient"></view>
   <view class="safe-top" :style="{height:statusHeight+'px'}"></view>
   <view class="topbar">
