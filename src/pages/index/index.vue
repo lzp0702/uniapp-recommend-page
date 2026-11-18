@@ -45,7 +45,7 @@
   </scroll-view>
 
   <scroll-view v-else class="subpage" scroll-y>
-    <view class="my-head"><view class="my-top"><text class="banner-kicker">MY SPACE</text><text @tap="openSettings">⚙ 设置</text></view><view class="my-profile"><view class="my-avatar">B</view><view><text class="my-name">遇见新朋友</text><small>完善资料，让更多人认识你</small></view><text class="edit" @tap="openAuth">编辑 ›</text></view><view class="completion"><view><text>资料完整度</text><b>65%</b></view><view class="progress"><i></i></view></view></view>
+    <view class="my-head"><view class="my-top"><text class="banner-kicker">MY SPACE</text><text @tap="openSettings">⚙ 设置</text></view><view class="my-profile"><view class="my-avatar">B</view><view><text class="my-name">{{myProfile.nickname||'遇见新朋友'}}</text><small>{{myProfile.city||'完善资料，让更多人认识你'}}</small></view><text class="edit" @tap="openAuth">编辑 ›</text></view><view class="completion"><view><text>资料完整度</text><b>65%</b></view><view class="progress"><i></i></view></view></view>
     <view class="my-stats"><view><b>0</b><small>获赞</small></view><view><b>0</b><small>关注</small></view><view><b>0</b><small>访客</small></view></view>
     <view class="menu"><view v-for="m in myMenus" :key="m.name" @tap="m.url?go(m.url):openFeature(m.type)"><text>{{m.icon}}　{{m.name}}</text><text>›</text></view></view>
   </scroll-view>
@@ -58,7 +58,7 @@
 </template>
 
 <script setup>
-import {ref} from 'vue'
+import {ref,computed,onShow} from 'vue'
 const statusHeight=ref(0)
 try { const info=uni.getSystemInfoSync(); statusHeight.value=info.statusBarHeight||0 } catch(e) { statusHeight.value=0 }
 const activeTab=ref(0),refreshing=ref(false),loading=ref(false),toast=ref(''),boardingId=ref(''),filterIndex=ref(0)
@@ -67,26 +67,27 @@ const tabTitles=['推荐','发现','消息','我的']
 const tabs=[{label:'推荐',icon:'⌂'},{label:'发现',icon:'✧'},{label:'消息',icon:'♡'},{label:'我的',icon:'◉'}]
 const channels=[{icon:'♡',name:'同城交友',desc:'发现身边的缘分'},{icon:'♫',name:'兴趣社群',desc:'找到同好伙伴'},{icon:'◉',name:'语音派对',desc:'用声音认识彼此'},{icon:'✦',name:'直播互动',desc:'分享此刻精彩'}]
 const topics=['周末去哪儿玩','分享最近喜欢的歌','理想中的第一次约会']
-const myMenus=[{icon:'▧',name:'我的动态',type:'dynamic'},{icon:'♡',name:'我的喜欢',type:'likes'},{icon:'♧',name:'我的关注',type:'following'},{icon:'◇',name:'实名认证',type:'verify'},{icon:'⚙',name:'账号与设置',url:'/pages/settings/index'}]
-const chats=ref([{name:'小鱼',last:'周末一起去看展吗？',time:'刚刚'},{name:'江姜',last:'哈哈哈哈太有意思了',time:'10:24'},{name:'柒',last:'欢迎来我的直播间～',time:'昨天'},{name:'安安',last:'你好，很高兴认识你',time:'周一'}])
+const myMenus=[{icon:'▧',name:'我的动态',type:'dynamic'},{icon:'♡',name:'我的喜欢',type:'likes'},{icon:'♧',name:'我的关注',type:'following'},{icon:'◉',name:'我的访客',type:'visitors'},{icon:'◇',name:'实名认证',type:'verify'},{icon:'⚙',name:'账号与设置',url:'/pages/settings/index'}]
+const chats=ref([{name:'小鱼',last:'周末一起去看展吗？',time:'刚刚'},{name:'江姜',last:'哈哈哈哈太有意思了',time:'10:24'},{name:'柒',last:'欢迎来我的直播间～',time:'昨天'},{name:'安安',last:'你好，很高兴认识你',time:'周一'}])\nconst myProfile=ref({nickname:'遇见新朋友',city:'',bio:'',tags:''})
 const names=['浅安','小鱼','柒','江姜','早睡','优优','晚风','南栀','橘子海','林间','星野','桃桃','阿梨','七月','小满','可乐','山茶','知夏','月亮','初一','雾岛','一颗糖','晴天','木木','晚星','小鹿','青禾','橙子','云朵','念念']
 const bios=['花自向阳开，慢慢成为更好的自己','喜欢旅行、摄影和路边的小猫','把普通日子过得闪闪发光','周末看展，偶尔徒步','认真生活，也认真认识新朋友','生活需要一点浪漫和惊喜']
 const tags=[['旅行','摄影','咖啡'],['王者荣耀','电影','音乐'],['宠物','美食','徒步'],['阅读','看展','城市漫步']]
 const users=ref(names.map((name,i)=>({id:i+1,name,age:20+i%8,avatar:'/static/avatar'+(i%6+1)+'.svg',desc:bios[i%bios.length],tags:tags[i%tags.length],online:i%3!==0,live:i%7===2,distance:(i+1)+' km',liked:false})))
-const displayUsers=users
+const displayUsers=computed(()=>{const list=users.value;const key=filterIndex.value;if(key===1)return list.filter(x=>parseInt(x.distance)<=8);if(key===2)return list.filter(x=>x.online);if(key===3)return list.filter(x=>x.tags.some(t=>['旅行','摄影','咖啡','音乐'].includes(t)));return list})
 function openUser(item){uni.navigateTo({url:'/pages/user/index?name='+encodeURIComponent(item.name)})}
 function enterRoom(item){uni.navigateTo({url:'/pages/room/index?name='+encodeURIComponent(item.name)})}
 function openChat(item){uni.navigateTo({url:'/pages/chat/index?name='+encodeURIComponent(item.name)})}
-function like(item){item.liked=!item.liked}
+function like(item){item.liked=!item.liked;const liked=uni.getStorageSync('meet-liked')||[];const next=item.liked?[...new Set([...liked,item.name])]:liked.filter(n=>n!==item.name);uni.setStorageSync('meet-liked',next);toast.value=item.liked?'已添加到喜欢':'已取消喜欢'}
 function go(url){uni.navigateTo({url})}
 function openFeature(type,name=''){uni.navigateTo({url:'/pages/feature/index?type='+encodeURIComponent(type)+'&name='+encodeURIComponent(name)})}
 function openSettings(){go('/pages/settings/index')}
 function openAuth(){openFeature('edit')}
-function showNotice(){toast.value='暂时没有新通知'}
+function showNotice(){openFeature('notifications')}
 function showSearch(){openFeature('search')}
 function refreshList(){refreshing.value=true;setTimeout(()=>{users.value=[...users.value].sort(()=>Math.random()-.5);refreshing.value=false;toast.value='推荐已刷新';setTimeout(()=>toast.value='',1500)},700)}
 function loadMore(){if(loading.value)return;loading.value=true;setTimeout(()=>{const base=users.value.length;const extra=names.slice(0,10).map((name,i)=>({id:base+i+1,name:name+'·'+(Math.floor(base/10)+1),age:21+i%7,avatar:'/static/avatar'+(i%6+1)+'.svg',desc:bios[i%6],tags:tags[i%4],online:i%2===0,live:i%6===0,distance:(i+2)+' km',liked:false}));users.value.push(...extra);loading.value=false},800)}
-function onScroll(){const query=uni.createSelectorQuery();query.selectAll('.user-card').boundingClientRect(rects=>{if(!rects||!rects.length)return;const target=uni.getSystemInfoSync().windowHeight*.48;const hit=rects.find(r=>r.top<target&&r.bottom>target);boardingId.value=hit?users.value[rects.indexOf(hit)]?.id:''}).exec()}
+function onShow(){try{const p=uni.getStorageSync('meet-profile');if(p)myProfile.value=p;const liked=uni.getStorageSync('meet-liked')||[];users.value.forEach(u=>u.liked=liked.includes(u.name))}catch(e){}}
+onShow(onShow)\nfunction onScroll(){const query=uni.createSelectorQuery();query.selectAll('.user-card').boundingClientRect(rects=>{if(!rects||!rects.length)return;const target=uni.getSystemInfoSync().windowHeight*.48;const hit=rects.find(r=>r.top<target&&r.bottom>target);boardingId.value=hit?users.value[rects.indexOf(hit)]?.id:''}).exec()}
 </script>
 
 <style lang="scss" scoped>
