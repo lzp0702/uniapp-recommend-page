@@ -74,7 +74,7 @@ onLoad((q={})=>{if(q.name)name.value=decodeURIComponent(q.name);loadMessages();c
 onShow(()=>{loadMessages();consumeMoneyMessage()})
 function persist(){uni.setStorageSync(storageKey(),list.value);try{const chats=uni.getStorageSync('meet-chat-list')||[];const item=chats.find(x=>x.name===name.value);const last=list.value[list.value.length-1];if(item&&last){item.last=last.text||last.title||(last.kind==='image'?'[图片]':last.kind==='redpacket'?'[红包]':last.kind==='transfer'?'[转账]':'[消息]');item.time='刚刚';item.unread=0;uni.setStorageSync('meet-chat-list',chats)}}catch(e){}scrollBottom()}
 function scrollBottom(){nextTick(()=>{lastMessageId.value='';nextTick(()=>{lastMessageId.value='message-bottom'})})}
-function onInputLineChange(e){const h=Number(e.detail.height)||38;inputHeight.value=Math.min(120,Math.max(38,h))}
+function onInputLineChange(e){const h=Number(e.detail.height)||38;inputHeight.value=h<=42?38:Math.min(120,Math.max(38,h))}
 function consumeMoneyMessage(){try{const m=uni.getStorageSync('meet-money-outgoing');if(!m)return;uni.removeStorageSync('meet-money-outgoing');list.value.push(m);persist()}catch(e){}}
 function send(){const value=draft.value.trim();if(!value)return;if(list.value.length>=500){toast.value='聊天记录太多，请清理后再发送';return}list.value.push({id:Date.now(),text:value,mine:true,time:Date.now(),reply:replyingTo.value?{text:replyingTo.value.text,mine:replyingTo.value.mine}:null});draft.value='';inputHeight.value=38;replyingTo.value=null;showTools.value=false;showEmoji.value=false;persist()}
 function choosePhoto(){uni.chooseImage({count:9,sizeType:['compressed'],success:r=>{r.tempFilePaths.forEach((src,i)=>list.value.push({id:Date.now()+i,text:src,mine:true,kind:'image'}));persist();showTools.value=false}})}
