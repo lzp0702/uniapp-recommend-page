@@ -12,7 +12,7 @@
     </view>
     <view v-else-if="type==='dynamic'" class="card">
       <textarea v-model="postText" placeholder="记录此刻的心情、生活和灵感..." maxlength="300"/>
-      <view class="attach" @tap="toast='图片选择已打开（演示模式）'">＋ 添加照片</view>
+      <view class="attach" @tap="choosePostImages">＋ 添加照片（{{postImages.length}}/9）</view><view v-if="postImages.length" class="image-preview"><image v-for="(src,i) in postImages" :key="src" :src="src" mode="aspectFill" @tap="removePostImage(i)"/></view>
       <button class="primary" @tap="publish">发布动态</button>
       <view class="section">我的动态</view>
       <view v-for="(p,i) in posts" :key="p.id||i" class="post"><text>{{p.text}}</text><view v-if="p.images?.length" class="post-images"><image v-for="src in p.images" :key="src" :src="src" mode="aspectFill" @tap="previewPostImage(src,p.images)"/></view><small>{{p.time}} · <text @tap="likePost(p)">♡ {{p.likes}}</text> · <text @tap="commentPost(p)">评论 {{p.comments?.length||0}}</text></small><view v-for="(cm,j) in p.comments" :key="j" class="comment">{{cm}}</view></view>
