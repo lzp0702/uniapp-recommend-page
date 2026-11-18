@@ -78,7 +78,8 @@ function openUser(item){uni.navigateTo({url:'/pages/user/index?name='+encodeURIC
 function enterRoom(item){uni.navigateTo({url:'/pages/room/index?name='+encodeURIComponent(item.name)})}
 function openChat(item){uni.navigateTo({url:'/pages/chat/index?name='+encodeURIComponent(item.name)})}
 function like(item){item.liked=!item.liked}
-function go(url){uni.navigateTo({url})}\nfunction openFeature(type,name=''){uni.navigateTo({url:'/pages/feature/index?type='+encodeURIComponent(type)+'&name='+encodeURIComponent(name)})}
+function go(url){uni.navigateTo({url})}
+function openFeature(type,name=''){uni.navigateTo({url:'/pages/feature/index?type='+encodeURIComponent(type)+'&name='+encodeURIComponent(name)})}
 function openSettings(){go('/pages/settings/index')}
 function openAuth(){go('/pages/auth/index')}
 function showNotice(){toast.value='暂时没有新通知'}
