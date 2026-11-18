@@ -16,18 +16,16 @@
     </view>
     <view id="message-bottom" class="bottom-anchor"></view>
   </scroll-view>
-  <view v-if="showTools" class="tool-panel">
-    <view class="tool-item" @tap="choosePhoto"><view class="tool-icon photo">▧</view><text>相册</text></view>
-    <view class="tool-item" @tap="takePhoto"><view class="tool-icon camera">◉</view><text>拍摄</text></view>
-    <view class="tool-item" @tap="chooseFile"><view class="tool-icon file">▤</view><text>文件</text></view>
-    <view class="tool-item" @tap="sendLocation"><view class="tool-icon location">⌖</view><text>位置</text></view>
-    <view class="tool-item" @tap="openPacketForm"><view class="tool-icon redpacket">￥</view><text>红包</text></view>
-    <view class="tool-item" @tap="openTransferForm"><view class="tool-icon transfer">↗</view><text>转账</text></view>
-    <view class="tool-item" @tap="sendContact"><view class="tool-icon contact">♙</view><text>个人名片</text></view>
-    <view class="tool-item" @tap="sendFavorite"><view class="tool-icon favorite">☆</view><text>收藏</text></view>
-  </view>
   <view v-if="packetModal" class="modal-mask" @tap="packetModal=false"><view class="money-modal packet-modal" @tap.stop><view class="money-head">发红包</view><view class="packet-type"><text :class="{active:packetType==='normal'}" @tap="packetType='normal'">普通红包</text><text :class="{active:packetType==='lucky'}" @tap="packetType='lucky'">拼手气红包</text></view><view class="money-label">金额</view><view class="money-input"><text>¥</text><input v-model="moneyAmount" type="digit" placeholder="0.00"/></view><view class="money-note"><input v-model="moneyGreeting" maxlength="24" placeholder="恭喜发财，大吉大利"/></view><view class="money-explain">当前为交互演示，不会扣款或产生真实资金交易</view><button class="money-submit" @tap="sendPacket">塞钱进红包</button><text class="money-cancel" @tap="packetModal=false">取消</text></view></view>
   <view v-if="transferModal" class="modal-mask" @tap="transferModal=false"><view class="money-modal" @tap.stop><view class="money-head">转账给 {{name}}</view><view class="money-label">转账金额</view><view class="money-input"><text>¥</text><input v-model="moneyAmount" type="digit" placeholder="0.00"/></view><view class="money-note"><input v-model="moneyGreeting" maxlength="24" placeholder="添加转账说明（选填）"/></view><view class="money-explain">演示转账仅生成聊天记录，不涉及支付</view><button class="money-submit transfer-submit" @tap="sendTransfer">确认转账</button><text class="money-cancel" @tap="transferModal=false">取消</text></view></view>
+  <view v-if="replyingTo" class="reply-preview"><view><text>回复 {{replyingTo.mine?'自己':name}}</text><text class="reply-snippet">{{replyingTo.text||'图片/其他消息'}}</text></view><text @tap="replyingTo=null">×</text></view>
+  <view v-if="selectedMessage" class="message-context-mask" @tap="closeMessageMenu"><view class="context-card" @tap.stop><view class="reaction-strip"><text v-for="e in quickReactions" :key="e" @tap="reactTo(selectedMessage,e)">{{e}}</text></view><view class="context-actions"><view @tap="replyMessage">回复 <text>↩</text></view><view @tap="copyMessage">复制 <text>▢</text></view><view @tap="forwardMessage">转发 <text>➦</text></view><view @tap="favoriteMessage">收藏 <text>☆</text></view><view class="danger" @tap="deleteMessage">删除 <text>⌫</text></view></view></view></view>
+  <view class="composer" :class="{'panel-open':showEmoji||showTools}">
+    <view class="composer-face" @tap="showEmoji=!showEmoji;showTools=false">☺</view>
+    <textarea v-model="draft" class="message-input" auto-height maxlength="-1" :show-confirm-bar="false" cursor-spacing="8" placeholder="发送消息" @confirm="send"/>
+    <view v-if="!draft.trim()" class="plus-button" @tap="showTools=!showTools;showEmoji=false">＋</view>
+    <view v-else class="send-button" @tap="send">发送</view>
+  </view>
   <view v-if="showEmoji" class="emoji-panel">
     <view class="emoji-grabber" @tap="emojiExpanded=!emojiExpanded"><view></view></view>
     <view class="emoji-tabs"><text :class="{selected:emojiTab==='recent'}" @tap="emojiTab='recent'">◷</text><text :class="{selected:emojiTab==='emoji'}" @tap="emojiTab='emoji'">☺</text><text :class="{selected:emojiTab==='stickers'}" @tap="emojiTab='stickers'">▧</text><text class="emoji-manage" @tap="toast='表情管理入口：可在正式版本接入表情商店'">＋</text></view>
@@ -37,13 +35,15 @@
     </scroll-view>
     <view class="emoji-footer"><text @tap="draft=draft.slice(0,-2)">删除</text><button :disabled="!draft.trim()" @tap="send">发送</button></view>
   </view>
-  <view v-if="replyingTo" class="reply-preview"><view><text>回复 {{replyingTo.mine?'自己':name}}</text><text class="reply-snippet">{{replyingTo.text||'图片/其他消息'}}</text></view><text @tap="replyingTo=null">×</text></view>
-  <view v-if="selectedMessage" class="message-context-mask" @tap="closeMessageMenu"><view class="context-card" @tap.stop><view class="reaction-strip"><text v-for="e in quickReactions" :key="e" @tap="reactTo(selectedMessage,e)">{{e}}</text></view><view class="context-actions"><view @tap="replyMessage">回复 <text>↩</text></view><view @tap="copyMessage">复制 <text>▢</text></view><view @tap="forwardMessage">转发 <text>➦</text></view><view @tap="favoriteMessage">收藏 <text>☆</text></view><view class="danger" @tap="deleteMessage">删除 <text>⌫</text></view></view></view></view>
-  <view class="composer" :class="{'panel-open':showEmoji||showTools}">
-    <view class="composer-face" @tap="showEmoji=!showEmoji;showTools=false">☺</view>
-    <textarea v-model="draft" class="message-input" auto-height maxlength="-1" :show-confirm-bar="false" cursor-spacing="8" placeholder="发送消息" @confirm="send"/>
-    <view v-if="!draft.trim()" class="plus-button" @tap="showTools=!showTools;showEmoji=false">＋</view>
-    <view v-else class="send-button" @tap="send">发送</view>
+  <view v-if="showTools" class="tool-panel">
+    <view class="tool-item" @tap="choosePhoto"><view class="tool-icon photo">▧</view><text>相册</text></view>
+    <view class="tool-item" @tap="takePhoto"><view class="tool-icon camera">◉</view><text>拍摄</text></view>
+    <view class="tool-item" @tap="chooseFile"><view class="tool-icon file">▤</view><text>文件</text></view>
+    <view class="tool-item" @tap="sendLocation"><view class="tool-icon location">⌖</view><text>位置</text></view>
+    <view class="tool-item" @tap="openPacketForm"><view class="tool-icon redpacket">￥</view><text>红包</text></view>
+    <view class="tool-item" @tap="openTransferForm"><view class="tool-icon transfer">↗</view><text>转账</text></view>
+    <view class="tool-item" @tap="sendContact"><view class="tool-icon contact">♙</view><text>个人名片</text></view>
+    <view class="tool-item" @tap="sendFavorite"><view class="tool-icon favorite">☆</view><text>收藏</text></view>
   </view>
   <view v-if="settingsVisible" class="sheet-mask" @tap="settingsVisible=false"><view class="settings-sheet" @tap.stop><view class="sheet-grabber"></view><view class="sheet-title">聊天设置</view><view class="settings-list">
     <view class="settings-item" @tap="toggleMute"><text>消息免打扰</text><switch :checked="muted" color="#07c160" @change="toggleMute"/></view>
