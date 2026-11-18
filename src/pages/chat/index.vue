@@ -98,10 +98,10 @@ function sendTransfer(){if(!transferAmountValid.value){toast.value='请输入有
 function moneyStatus(m){if(!m)return'pending';if(m.status==='returned'||m.status==='expired'||m.status==='claimed')return m.status;if(m.claimed)return'claimed';if(m.expiresAt&&Date.now()>=m.expiresAt){m.status='expired';m.returnedAt=Date.now();return'expired'}return'pending'}
 function formatTime(t){if(!t)return'刚刚';const d=new Date(t);return [String(d.getHours()).padStart(2,'0'),String(d.getMinutes()).padStart(2,'0')].join(':')}
 function transferStatusText(m){const s=moneyStatus(m);return s==='claimed'?'已收款':s==='returned'?'已退还':s==='expired'?'24小时未收款，已退回':'待收款'}
-function openPacket(m){moneyDetail.value=m;packetOpening.value=false}
+function openPacket(m){uni.setStorageSync('meet-money-detail',{...m,chatName:name.value});uni.navigateTo({url:'/pages/packet-detail/index?name='+encodeURIComponent(name.value)})}
 function animatePacket(){packetOpening.value=true;setTimeout(()=>{if(moneyDetail.value&&moneyStatus(moneyDetail.value)==='pending'){moneyDetail.value.claimed=true;moneyDetail.value.status='claimed';moneyDetail.value.claimedAt=Date.now();persist()}},650)}
 function claimPacket(){if(!moneyDetail.value)return;moneyDetail.value.claimed=true;moneyDetail.value.status='claimed';moneyDetail.value.claimedAt=Date.now();persist();moneyDetail.value=null;toast.value='已存入零钱（模拟）'}
-function openTransfer(m){moneyDetail.value=m}
+function openTransfer(m){uni.setStorageSync('meet-money-detail',{...m,chatName:name.value});uni.navigateTo({url:'/pages/transfer-detail/index?name='+encodeURIComponent(name.value)})}
 function acceptTransfer(){const m=moneyDetail.value;if(!m||moneyStatus(m)!=='pending')return;m.status='claimed';m.claimed=true;m.claimedAt=Date.now();m.arrivalAt=Date.now()+(m.arrival==='2小时到账'?7200000:m.arrival==='24小时延迟到账'?86400000:0);persist();moneyDetail.value=null;toast.value=m.arrivalAt>Date.now()?'已确认收款，按设定时间模拟到账':'已确认收款，零钱到账（模拟）'}
 function refundTransfer(){const m=moneyDetail.value;if(!m||moneyStatus(m)!=='pending')return;m.status='returned';m.returnedAt=Date.now();persist();moneyDetail.value=null;toast.value='已原路退还（模拟）'}
 function sendFavorite(){list.value.push({id:Date.now(),text:'分享了一条收藏内容',mine:true});persist();showTools.value=false}
