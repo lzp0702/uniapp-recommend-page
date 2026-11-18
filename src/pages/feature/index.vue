@@ -60,7 +60,11 @@ function onLoad(query){type.value=query.type||'about';routeName.value=query.name
 onLoad(uni.getCurrentPages().slice(-1)[0]?.options||{})
 function back(){uni.navigateBack()}
 function toggle(k,v){toggles.value[k]=v;uni.setStorageSync('meet-settings',toggles.value)}
-function save(){uni.setStorageSync('meet-profile',profile.value);toast.value='资料已保存在本机'}\nfunction chooseAvatar(){uni.chooseImage({count:1,sizeType:['compressed'],success:r=>{profile.value.avatar=r.tempFilePaths[0];toast.value='头像已选择，记得保存资料'}})}\nfunction choosePostImages(){const remain=9-postImages.value.length;if(remain<=0){toast.value='最多添加9张照片';return}uni.chooseImage({count:remain,sizeType:['compressed'],success:r=>{postImages.value=[...postImages.value,...r.tempFilePaths].slice(0,9)}})}\nfunction removePostImage(i){postImages.value.splice(i,1)}\nfunction previewPostImage(src,urls){uni.previewImage({current:src,urls})}
+function save(){uni.setStorageSync('meet-profile',profile.value);toast.value='资料已保存在本机'}
+function chooseAvatar(){uni.chooseImage({count:1,sizeType:['compressed'],success:r=>{profile.value.avatar=r.tempFilePaths[0];toast.value='头像已选择，记得保存资料'}})}
+function choosePostImages(){const remain=9-postImages.value.length;if(remain<=0){toast.value='最多添加9张照片';return}uni.chooseImage({count:remain,sizeType:['compressed'],success:r=>{postImages.value=[...postImages.value,...r.tempFilePaths].slice(0,9)}})}
+function removePostImage(i){postImages.value.splice(i,1)}
+function previewPostImage(src,urls){uni.previewImage({current:src,urls})}
 function publish(){if(!postText.value.trim()){toast.value='先写下你的动态内容';return}posts.value.unshift({id:Date.now(),text:postText.value.trim(),images:[...postImages.value],time:'刚刚',likes:0,liked:false,comments:[]});uni.setStorageSync('meet-posts',posts.value);postText.value='';postImages.value=[];toast.value='动态发布成功'}
 function likePost(p){p.liked=!p.liked;p.likes=Math.max(0,p.likes+(p.liked?1:-1));uni.setStorageSync('meet-posts',posts.value)}
 function commentPost(p){uni.showModal({title:'评论动态',editable:true,placeholderText:'写下你的评论',success:r=>{if(r.confirm&&r.content?.trim()){p.comments=p.comments||[];p.comments.push(r.content.trim());uni.setStorageSync('meet-posts',posts.value)}}})}
